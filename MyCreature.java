@@ -16,7 +16,8 @@ public class MyCreature extends Creature {
     // Random number generator
     Random rand = new Random();
     int chromosomeLength;
-    private float[] chromosome;
+    private float[][] chromosome;
+    public final float[] eatFood = {0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0.9f, 0f};
 
 
     /* Empty constructor - might be a good idea here to put the code that 
@@ -27,12 +28,20 @@ public class MyCreature extends Creature {
                       to produce on every turn
      */
     public MyCreature(int numPercepts, int numActions) {
-        //System.out.println(chromosome1[row][col]);
+        //int rowLength = (int) Math.pow(3, numPercepts);
+        this.chromosomeLength = 30;
+        this.chromosome = new float[this.chromosomeLength][numActions];
+        for (float[] row : this.chromosome) {
+            for (int col = 0; col < row.length; col++) {
+                row[col] = rand.nextFloat();
+                //System.out.println(chromosome[row][col]);
+            }
+        }
 
-        //System.out.println((Arrays.toString(chromosome1)));
+        //System.out.println((Arrays.toString(chromosome[0])));
     }
 
-    public MyCreature(float[] chromosome) {
+    public MyCreature(float[][] chromosome) {
         this.chromosome = chromosome;
         this.chromosomeLength = chromosome.length;
     }
@@ -60,38 +69,67 @@ public class MyCreature extends Creature {
         // the percepts.  You need to replace this code.
         float actions[] = new float[numExpectedActions];
         int[] perceptsCopy = Arrays.copyOf(percepts, percepts.length);
-
+        
         for (int i = 0; i < perceptsCopy.length; i++) {
             perceptsCopy[i]++;
         }
-        System.out.println(Arrays.toString(perceptsCopy));
-        
+        //System.out.println(Arrays.toString(perceptsCopy));
+
         StringBuilder monsterString = new StringBuilder();
         StringBuilder foodString = new StringBuilder();
         StringBuilder creatureString = new StringBuilder();
 
-        for (int i = 0; i <=1 ; i++) {
+        for (int i = 0; i <= 1; i++) {
             monsterString.append(perceptsCopy[i]);
         }
         //System.out.println(monsterString);
-        for (int i = 2; i <=3 ; i++) {
+        for (int i = 2; i <= 3; i++) {
             creatureString.append(perceptsCopy[i]);
         }
         //System.out.println(creatureString);
-        for (int i = 4; i <=5 ; i++) {
+        for (int i = 4; i <= 5; i++) {
             foodString.append(perceptsCopy[i]);
         }
         //System.out.println(foodString);
-               
+
+        //codes return value from 0 to 8 depending on location of nearest monster, creature, food etc.
         int monsterCode = Integer.parseInt(monsterString.toString(), 3);
         int creatureCode = Integer.parseInt(creatureString.toString(), 3);
         int foodCode = Integer.parseInt(foodString.toString(), 3);
-        
+
         //System.out.println(monsterCode);
         //System.out.println(creatureCode);
         //System.out.println(foodCode);
-        
-        
+        //check monsters
+        if (monsterCode != 4) {
+            actions = chromosome[monsterCode];
+        } else {
+            //check if food is on square and what state, if no food check creatures
+            if (foodCode == 4) {
+                if (perceptsCopy[6] == 2) {
+                    actions = chromosome[9];
+                } else {
+                    if (perceptsCopy[7] == 2) {
+                        actions = chromosome[10];
+
+                    } else {
+                        //check creatures
+                        if (creatureCode != 4) {
+                            actions = chromosome[creatureCode + 11];
+                        } else {
+                            //all zeros case
+                            actions = chromosome[20];
+                        }
+                    }
+                }
+
+            } else {
+                //check if other food around
+                actions = chromosome[foodCode + 21];
+
+            }
+        }
+
         return actions;
     }
 
@@ -103,20 +141,25 @@ public class MyCreature extends Creature {
 
     }
 
-    public float[] getChromosome() {
-        float[] chromosomeCopy = Arrays.copyOf(this.chromosome, chromosomeLength);
+    public float[][] getChromosome() {
+        float[][] chromosomeCopy = new float[this.chromosomeLength][];
+        for (int gene = 0; gene < this.chromosomeLength; gene++) {
+            chromosomeCopy[gene] = Arrays.copyOf(this.chromosome[gene], this.chromosome[gene].length);
+        }
         return chromosomeCopy;
     }
 
-    public float getChromosomeAt(int index) {
+    public float[] getChromosomeAt(int index) {
         return chromosome[index];
     }
 
-    public void setChromosome(float[] chromosome) {
-        this.chromosome = Arrays.copyOf(chromosome, chromosome.length);
+    public void setChromosome(float[][] chromosome) {
+        for (int gene = 0; gene < this.chromosomeLength; gene++) {
+            this.chromosome[gene] = Arrays.copyOf(chromosome[gene], chromosome[gene].length);
+        }
     }
 
-    public void setChromosome(float value, int index) {
+    public void setChromosome(float[] value, int index) {
         this.chromosome[index] = value;
     }
 }
