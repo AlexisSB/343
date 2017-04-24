@@ -19,7 +19,7 @@ public class MyWorld extends World {
    * execute.
      */
     private final int _numTurns = 100;
-    private final int _numGenerations = 1000;
+    private final int _numGenerations = 500;
 
     /* Constructor.  
    
@@ -46,7 +46,7 @@ public class MyWorld extends World {
     public static void main(String[] args) {
         // Here you can specify the grid size, window size and whether torun
         // in repeatable mode or not
-        int gridSize = 24;
+        int gridSize = 5;
         int windowWidth = 800;
         int windowHeight = 800;
         boolean repeatableMode = true;
