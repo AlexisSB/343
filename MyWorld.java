@@ -19,7 +19,7 @@ public class MyWorld extends World {
    * execute.
      */
     private final int _numTurns = 100;
-    private final int _numGenerations = 1000;
+    private final int _numGenerations = 2000;
 
     /* Constructor.  
    
@@ -41,14 +41,13 @@ public class MyWorld extends World {
     }
 
     /* The main function for the MyWorld application
-
      */
     public static void main(String[] args) {
         // Here you can specify the grid size, window size and whether torun
         // in repeatable mode or not
         int gridSize = 24;
-        int windowWidth = 800;
-        int windowHeight = 800;
+        int windowWidth = 1200;
+        int windowHeight = 1200;
         boolean repeatableMode = true;
 
         /* Here you can specify percept format to use - there are three to
@@ -150,9 +149,21 @@ public class MyWorld extends World {
         for (int creature = 0; creature < old_population.length; creature++) {
 
             boolean alive = !(old_population[creature].isDead());
-            float denominator = (float) _numTurns * 100;
-            //int survivorBias = 0; // Can use to favour those that don't die.
-
+            float denominator = ((float) _numTurns *4)+100;
+            if (alive) {
+                float baseFitness = ((float) _numTurns *4)+old_population[creature].getEnergy();
+                float normalisedFitness = baseFitness/denominator;
+                old_fitness[creature] = normalisedFitness;
+                avgFitness += normalisedFitness;
+            }else{
+                float baseFitness = (old_population[creature].timeOfDeath()*4)+old_population[creature].getEnergy();
+                float normalisedFitness = baseFitness/denominator;
+                old_fitness[creature] = normalisedFitness;
+                avgFitness += normalisedFitness;
+            }
+                
+            }
+/*
             if (alive) {
                 float baseFitness = (2f / 3) * 100;
                 float extraFitness = (100f / 3) * ((float) old_population[creature].getEnergy() / 100);
@@ -175,6 +186,7 @@ public class MyWorld extends World {
                 }
             }
         }
+            */
         //System.out.println(Arrays.toString(old_fitness));
 
         // Right now the information is used to print some stats...but you should
@@ -204,11 +216,12 @@ public class MyWorld extends World {
         for (int i = 0; i < numCreatures; i++) {
             sum += old_fitness[i];
         }
-
+        System.out.println(sum);
         //Normalize values in roulette array so sum =1.
         for (int i = 0; i < numCreatures; i++) {
             rouletteFitness[i] /= sum;
         }
+        System.out.println(Arrays.toString(rouletteFitness));
 
         //parent pick and crossover for each creature.
         //MyCreature[] parents = new MyCreature[2];
@@ -235,24 +248,26 @@ public class MyWorld extends World {
             //System.out.println(parents[parent]);
             //parent.printChromosome();
 
-            float[] parentChromosome1 = old_population[parentIndex[0]].getChromosome();
-            float[] parentChromosome2 = old_population[parentIndex[1]].getChromosome();
-
-            float[] childChromosome = Arrays.copyOf(parentChromosome1, parentChromosome1.length);
+            float[][] parentChromosome1 = old_population[parentIndex[0]].getChromosome();
+            float[][] parentChromosome2 = old_population[parentIndex[1]].getChromosome();
+            
+               //may want to create copy instead of copying pointer
+            float[][] childChromosome = parentChromosome1;
             int splitPoint = rand.nextInt(childChromosome.length);
             //crossover
             for (int changePoint = splitPoint; changePoint < childChromosome.length; changePoint++) {
                 childChromosome[changePoint] = parentChromosome2[changePoint];
             }
             //mutation
-            float mutationChance = 0.05f;
-            int maxMutations = 100;
+            float mutationChance = 0.2f;
+            int maxMutations = 10;
             int numberOfMutations = rand.nextInt(maxMutations);
             for (int mutation = 0; mutation < numberOfMutations; mutation++) {
                 float mutationRoll = rand.nextFloat();
-                if (mutationRoll > (1 - mutationChance)) {
-                    int mutationLocation = rand.nextInt(childChromosome.length);
-                    childChromosome[mutationLocation]=rand.nextFloat();
+                if (mutationRoll < mutationChance) {
+                    int geneLocation = rand.nextInt(childChromosome.length);
+                    int mutationLocation = rand.nextInt(numActions);
+                    childChromosome[geneLocation][mutationLocation]=rand.nextFloat();
                 }
             }
 
