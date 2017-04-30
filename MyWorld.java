@@ -248,11 +248,11 @@ public class MyWorld extends World {
             //System.out.println(parents[parent]);
             //parent.printChromosome();
 
-            float[][] parentChromosome1 = old_population[parentIndex[0]].getChromosome();
-            float[][] parentChromosome2 = old_population[parentIndex[1]].getChromosome();
+            int[] parentChromosome1 = old_population[parentIndex[0]].getChromosome();
+            int[] parentChromosome2 = old_population[parentIndex[1]].getChromosome();
             
                //may want to create copy instead of copying pointer
-            float[][] childChromosome = parentChromosome1;
+            int[] childChromosome = parentChromosome1;
             int splitPoint = rand.nextInt(childChromosome.length);
             //crossover
             for (int changePoint = splitPoint; changePoint < childChromosome.length; changePoint++) {
@@ -267,7 +267,7 @@ public class MyWorld extends World {
                 if (mutationRoll < mutationChance) {
                     int geneLocation = rand.nextInt(childChromosome.length);
                     int mutationLocation = rand.nextInt(numActions);
-                    childChromosome[geneLocation][mutationLocation]=rand.nextFloat();
+                    childChromosome[geneLocation]=rand.nextInt();
                 }
             }
 
