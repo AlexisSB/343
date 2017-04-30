@@ -18,8 +18,8 @@ public class MyWorld extends World {
    * and the number of generations that the genetic algorithm will 
    * execute.
      */
-    private final int _numTurns = 100;
-    private final int _numGenerations = 2000;
+    private final int _numTurns = 60;
+    private final int _numGenerations = 500;
 
     /* Constructor.  
    
@@ -61,17 +61,17 @@ public class MyWorld extends World {
         MyWorld sim = new MyWorld(gridSize, windowWidth, windowHeight, repeatableMode, perceptFormat);
     }
 
-
-    /* The MyWorld class must override this function, which is
-     used to fetch a population of creatures at the beginning of the
-     first simulation.  This is the place where you need to  generate
-     a set of creatures with random behaviours.
-  
-     Input: numCreatures - this variable will tell you how many creatures
-                           the world is expecting
-                            
-     Returns: An array of MyCreature objects - the World will expect numCreatures
-              elements in that array     
+    /**
+     * The MyWorld class must override this function, which is used to fetch a
+     * population of creatures at the beginning of the first simulation. This is
+     * the place where you need to generate a set of creatures with random
+     * behaviours.
+     *
+     * Input: numCreatures - this variable will tell you how many creatures the
+     * world is expecting
+     *
+     * Returns: An array of MyCreature objects - the World will expect
+     * numCreatures elements in that array
      */
     @Override
     public MyCreature[] firstGeneration(int numCreatures) {
@@ -89,25 +89,24 @@ public class MyWorld extends World {
         return population;
     }
 
-    /* The MyWorld class must override this function, which is
-     used to fetch the next generation of the creatures.  This World will
-     proivde you with the old_generation of creatures, from which you can
-     extract information relating to how they did in the previous simulation...
-     and use them as parents for the new generation.
-  
-     Input: old_population_btc - the generation of old creatures before type casting. 
-                              The World doesn't know about MyCreature type, only
-                              its parent type Creature, so you will have to
-                              typecast to MyCreatures.  These creatures 
-                              have been simulated over and their state
-                              can be queried to compute their fitness
-            numCreatures - the number of elements in the old_population_btc
-                           array
-                        
-                            
-  Returns: An array of MyCreature objects - the World will expect numCreatures
-           elements in that array.  This is the new population that will be
-           use for the next simulation.  
+    /**
+     * The MyWorld class must override this function, which is used to fetch the
+     * next generation of the creatures. This World will proivde you with the
+     * old_generation of creatures, from which you can extract information
+     * relating to how they did in the previous simulation... and use them as
+     * parents for the new generation.
+     *
+     * Input: old_population_btc - the generation of old creatures before type
+     * casting. The World doesn't know about MyCreature type, only its parent
+     * type Creature, so you will have to typecast to MyCreatures. These
+     * creatures have been simulated over and their state can be queried to
+     * compute their fitness numCreatures - the number of elements in the
+     * old_population_btc array
+     *
+     *
+     * Returns: An array of MyCreature objects - the World will expect
+     * numCreatures elements in that array. This is the new population that will
+     * be use for the next simulation.
      */
     @Override
     public MyCreature[] nextGeneration(Creature[] old_population_btc, int numCreatures) {
@@ -146,47 +145,8 @@ public class MyWorld extends World {
         }
 
         //Fitness goes here.
-        for (int creature = 0; creature < old_population.length; creature++) {
-
-            boolean alive = !(old_population[creature].isDead());
-            float denominator = ((float) _numTurns *4)+100;
-            if (alive) {
-                float baseFitness = ((float) _numTurns *4)+old_population[creature].getEnergy();
-                float normalisedFitness = baseFitness/denominator;
-                old_fitness[creature] = normalisedFitness;
-                avgFitness += normalisedFitness;
-            }else{
-                float baseFitness = (old_population[creature].timeOfDeath()*4)+old_population[creature].getEnergy();
-                float normalisedFitness = baseFitness/denominator;
-                old_fitness[creature] = normalisedFitness;
-                avgFitness += normalisedFitness;
-            }
-                
-            }
-/*
-            if (alive) {
-                float baseFitness = (2f / 3) * 100;
-                float extraFitness = (100f / 3) * ((float) old_population[creature].getEnergy() / 100);
-                float totalFitness = (baseFitness + extraFitness) / 100;
-                old_fitness[creature] = totalFitness;
-                avgFitness += totalFitness;
-            } else {
-                if (old_population[creature].timeOfDeath() > ((float) _numTurns / 2)) {
-                    float baseFitness = (1f / 3) * 100;
-                    float extraFitness = (100f / 3) * ((float) old_population[creature].getEnergy() / 100);
-                    float totalFitness = (baseFitness + extraFitness) / 100;
-                    old_fitness[creature] = totalFitness;
-                    avgFitness += totalFitness;
-                } else {
-                    float baseFitness = 0;
-                    float extraFitness = (100f / 3) * ((float) old_population[creature].getEnergy() / 100);
-                    float totalFitness = (baseFitness + extraFitness) / 100;
-                    old_fitness[creature] = totalFitness;
-                    avgFitness += totalFitness;
-                }
-            }
-        }
-            */
+        old_fitness = calculatePopulationFitness(old_population, numCreatures);
+        float fitnessSum = sumOfFitness(old_population, numCreatures);
         //System.out.println(Arrays.toString(old_fitness));
 
         // Right now the information is used to print some stats...but you should
@@ -194,7 +154,7 @@ public class MyWorld extends World {
         // you define your fitness function.  You should add a print out or
         // some visual display of average fitness over generations.
         avgLifeTime /= (float) numCreatures;
-        avgFitness /= (float) numCreatures;
+        avgFitness = fitnessSum/(float) numCreatures;
         System.out.println("Simulation stats:");
         System.out.println("  Survivors    : " + nSurvivors + " out of " + numCreatures);
         System.out.println("  Avg life time: " + avgLifeTime + " turns");
@@ -210,78 +170,126 @@ public class MyWorld extends World {
         int numActions = this.expectedNumberofActions();
 
         //Roulette Selection
+        //Set up array for roulette selection
         float[] rouletteFitness = Arrays.copyOf(old_fitness, numCreatures);
-        float sum = 0;
-        //sum values in fitness array
         for (int i = 0; i < numCreatures; i++) {
-            sum += old_fitness[i];
-        }
-        System.out.println(sum);
-        //Normalize values in roulette array so sum =1.
-        for (int i = 0; i < numCreatures; i++) {
-            rouletteFitness[i] /= sum;
+            rouletteFitness[i] /= fitnessSum;
         }
         System.out.println(Arrays.toString(rouletteFitness));
+        
+        if (numCreatures == 1) {
+            for (int i = 0; i < numCreatures; i++) {
+                new_population[i] = old_population[i];
+            }
+        } else {
 
-        //parent pick and crossover for each creature.
-        //MyCreature[] parents = new MyCreature[2];
-        //int chromosomeLength = (int)Math.pow(3,numPercepts)*numActions;
-        int numParents = 2;
-        int[] parentIndex = new int[numParents];
-        for (int i = 0; i < numCreatures; i++) {
-            //choose parents code, uses similar picking as random card shuffle tutorial in 241
-            //for (int parent = 0; parent < parents.length; parent++) {
-
-            int parents = 0;
-            while (parents < numParents) {
-                int index = 0;
-                float number = rand.nextFloat();
-                while (number > rouletteFitness[index]) {
-                    number = number - rouletteFitness[index];
-                    index++;
+            //Start new population loop
+            for (int creature = 0; creature < numCreatures; creature++) {
+                //parent pick
+                MyCreature parent1 = old_population[pickParentIndex(rouletteFitness)];
+                MyCreature parent2 = old_population[pickParentIndex(rouletteFitness)];
+                //check equivalence here.
+                while (parent1 == parent2) {
+                    parent2 = old_population[pickParentIndex(rouletteFitness)];
                 }
-                parentIndex[parents] = index;
-                parents++;
-            }
-            //System.out.println(Arrays.toString(parent.getChromosome()));
-            //System.out.println(old_fitness[index]);
-            //System.out.println(parents[parent]);
-            //parent.printChromosome();
 
-            int[] parentChromosome1 = old_population[parentIndex[0]].getChromosome();
-            int[] parentChromosome2 = old_population[parentIndex[1]].getChromosome();
-            
-               //may want to create copy instead of copying pointer
-            int[] childChromosome = parentChromosome1;
-            int splitPoint = rand.nextInt(childChromosome.length);
-            //crossover
-            for (int changePoint = splitPoint; changePoint < childChromosome.length; changePoint++) {
-                childChromosome[changePoint] = parentChromosome2[changePoint];
-            }
-            //mutation
-            float mutationChance = 0.2f;
-            int maxMutations = 10;
-            int numberOfMutations = rand.nextInt(maxMutations);
-            for (int mutation = 0; mutation < numberOfMutations; mutation++) {
-                float mutationRoll = rand.nextFloat();
-                if (mutationRoll < mutationChance) {
-                    int geneLocation = rand.nextInt(childChromosome.length);
-                    int mutationLocation = rand.nextInt(numActions);
-                    childChromosome[geneLocation]=rand.nextInt();
+                //may want to create copy instead of copying pointer
+                MyCreature child = new MyCreature(numPercepts, numActions);
+                //crossover
+                //takes average of parents
+                for (int index = 0; index < child.chromosomeLength; index++) {
+                    float[] geneParent1 = parent1.getStrand(index);
+                    float[] geneParent2 = parent2.getStrand(index);
+                    float[] geneChild = new float[numActions];
+
+                    //System.out.println(Arrays.toString(geneParent1));
+                    //System.out.println(Arrays.toString(geneParent2));
+                    //System.out.println(Arrays.toString(geneChild));
+
+                    for (int subIndex = 0; subIndex < numActions; subIndex++) {
+                        geneChild[subIndex] = (geneParent1[subIndex] + geneParent2[subIndex]) / 2;
+                    }
+                    //System.out.println(Arrays.toString(geneChild));
+
                 }
-            }
 
-            MyCreature child = new MyCreature(childChromosome);
-            new_population[i] = child;
+                //System.out.println(Arrays.toString(parent1.getChromosome()[0]));
+                //System.out.println(Arrays.toString(parent2.getChromosome()[0]));
+                //System.out.println(Arrays.toString(child.getChromosome()[0]));
+                new_population[creature] = child;
+
+                //mutation
+                /*
+        float mutationChance = 0.2f;
+        int maxMutations = 10;
+        int numberOfMutations = rand.nextInt(maxMutations);
+        for (int mutation = 0; mutation < numberOfMutations; mutation++) {
+            float mutationRoll = rand.nextFloat();
+            if (mutationRoll < mutationChance) {
+                int geneLocation = rand.nextInt(childChromosome.length);
+                int mutationLocation = rand.nextInt(numActions);
+                childChromosome[geneLocation] = rand.nextInt();
+            }
         }
 
-        /*
+        MyCreature child = new MyCreature(childChromosome);
+        new_population[i] = child;
+                 */
+
+ /*
         for (int i = 0; i < numCreatures; i++) {
             new_population[i] = old_population[i];
         }
-         */
-        // Return new population of cratures.
+                 */
+                // Return new population of cratures.
+            }
+        }
         return new_population;
+    }
+
+    public float[] calculatePopulationFitness(MyCreature[] population, int numCreatures) {
+        //Fitness goes here.
+        float[] fitness = new float[numCreatures];
+        int turnBias = 4;
+        float denominator = ((float) _numTurns * turnBias) + 100;
+        for (int creature = 0; creature < numCreatures; creature++) {
+            boolean alive = !(population[creature].isDead());
+            if (alive) {
+                float baseFitness = ((float) _numTurns * turnBias) + population[creature].getEnergy();
+                //float normalisedFitness = baseFitness / denominator;
+                //fitness[creature] = normalisedFitness;
+                fitness[creature] = baseFitness;
+            } else {
+                float baseFitness = (population[creature].timeOfDeath() * turnBias) + population[creature].getEnergy();
+                //float normalisedFitness = baseFitness / denominator;
+                //fitness[creature] = normalisedFitness;
+                 fitness[creature] = baseFitness;
+            }
+
+        }
+        return fitness;
+    }
+
+    public float sumOfFitness(MyCreature[] population, int numCreatures) {
+        float[] fitness = calculatePopulationFitness(population, numCreatures);
+        float sum = 0;
+        for (int creature = 0; creature < numCreatures; creature++) {
+            sum += fitness[creature];
+        }
+
+        return sum;
+
+    }
+
+    public int pickParentIndex(float[] fitnessArray) {
+        int index = 0;
+        float number = rand.nextFloat();
+        while (number > fitnessArray[index]) {
+            number = number - fitnessArray[index];
+            index++;
+        }
+        return index;
+
     }
 
 }

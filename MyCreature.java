@@ -16,45 +16,57 @@ public class MyCreature extends Creature {
     // Random number generator
     Random rand = new Random();
     int chromosomeLength;
-    private int[] chromosome;
+    private float[][] chromosome;
 
-    /* Empty constructor - might be a good idea here to put the code that 
-   initialises the chromosome to some random state   
-  
-   Input: numPercept - number of percepts that creature will be receiving
-          numAction - number of action output vector that creature will need
-                      to produce on every turn
+    /**
+     * Empty constructor - might be a good idea here to put the code that
+     * initialises the chromosome to some random state * Input: numPercept -
+     * number of percepts that creature will be receiving numAction - number of
+     * action output vector that creature will need to produce on every turn
      */
     public MyCreature(int numPercepts, int numActions) {
         //int rowLength = (int) Math.pow(3, numPercepts);
         //intiailse length of chromosome
-        this.chromosomeLength = (int) Math.pow(3, numPercepts) * numActions;
-
-        this.chromosome = new int[this.chromosomeLength];
+        //this.chromosomeLength = (int) Math.pow(3, numPercepts) * numActions;
+        this.chromosomeLength = 30;
+        this.chromosome = new float[this.chromosomeLength][];
         for (int row = 0; row < this.chromosome.length; row++) {
-            this.chromosome[row] = rand.nextInt(numActions);
+            this.chromosome[row] = generateRandomChance();
             //System.out.println(chromosome[row][col]);
         }
 
-        //System.out.println((Arrays.toString(chromosome)));
+        //System.out.println((Arrays.toString(chromosome[0])));
+        //System.out.println((Arrays.toString(chromosome[1])));
     }
 
-    public MyCreature(int[] chromosome) {
+    public MyCreature(float[][] chromosome) {
         this.chromosome = chromosome;
         this.chromosomeLength = chromosome.length;
     }
 
-    /* This function must be overridden by MyCreature, because it implements
-     the AgentFunction which controls creature behavoiur.  This behaviour
-     should be governed by a model (that you need to come up with) that is
-     parameterise by the chromosome.  
-  
-     Input: percepts - an array of percepts
-            numPercepts - the size of the array of percepts depend on the percept
-                          chosen
-            numExpectedAction - this number tells you what the expected size
-                                of the returned array of percepts should bes
-     Returns: an array of actions 
+    /**
+     * Specifically for percept 1. Used for converting base 3 percepts array to
+     * perceptCode.
+     *
+     * @param percepts
+     * @return
+     */
+    public int[] addOneToPercepts(int[] percepts) {
+        int[] perceptsCopy = Arrays.copyOf(percepts, percepts.length);
+        for (int i = 0; i < perceptsCopy.length; i++) {
+            perceptsCopy[i]++;
+        }
+        return perceptsCopy;
+    }
+
+    /**
+     * This function must be overridden by MyCreature, because it implements the
+     * AgentFunction which controls creature behavoiur. This behaviour should be
+     * governed by a model (that you need to come up with) that is parameterise
+     * by the chromosome. * Input: percepts - an array of percepts numPercepts -
+     * the size of the array of percepts depend on the percept chosen
+     * numExpectedAction - this number tells you what the expected size of the
+     * returned array of percepts should bes Returns: an array of actions
      */
     @Override
     public float[] AgentFunction(int[] percepts, int numPercepts, int numExpectedActions) {
@@ -66,19 +78,58 @@ public class MyCreature extends Creature {
         // At the moment, the actions are chosen completely at random, ignoring
         // the percepts.  You need to replace this code.
         float actions[] = new float[numExpectedActions];
-        int[] perceptsCopy = Arrays.copyOf(percepts, percepts.length);
+        float[] chances = new float[actions.length];
+        chances = generateRandomChance();
+        //System.out.println(Arrays.toString(chances));
 
-        for (int i = 0; i < perceptsCopy.length; i++) {
-            perceptsCopy[i]++;
+        int monsterCode = generatePerceptCode(percepts, 1);
+        int foodCode = generatePerceptCode(percepts, 2) + 9;
+        int creatureCode = generatePerceptCode(percepts, 3) + 18;
+        int ripeCode = generatePerceptCode(percepts, 4) + 27;
+        //System.out.println(monsterCode);
+        //System.out.println(foodCode);
+        //System.out.println(creatureCode);
+        //System.out.println(ripeCode);
+
+        if (monsterCode != 4) {
+            chances = chromosome[monsterCode];
+            //there is monster nearby
+        } else {
+            if (ripeCode != 27) {
+                //your sitting on food
+                chances = chromosome[ripeCode];
+            } else {
+                if (foodCode != 13) {
+                    //there is food nearby
+                    chances = chromosome[foodCode];
+                } else {
+                    if (creatureCode != 22) {
+                        //creature nearyby
+                        chances = chromosome[creatureCode];
+                    }
+                }
+            }
         }
+        //System.out.println(Arrays.toString(chances));
+
+        actions = randomActionPick(chances);
+        //System.out.println(Arrays.toString(actions));
+        //System.out.println(Arrays.toString(perceptsCopy));
+
+        return actions;
+    }
+
+    public int generatePerceptCode(int[] percepts, int choice) {
+        int[] perceptsCopy = addOneToPercepts(percepts);
         //System.out.println(Arrays.toString(perceptsCopy));
 
         StringBuilder perceptString = new StringBuilder();
         StringBuilder monsterString = new StringBuilder();
         StringBuilder foodString = new StringBuilder();
+        StringBuilder ripeString = new StringBuilder();
         StringBuilder creatureString = new StringBuilder();
 
-        for (int i = 0; i < numPercepts; i++) {
+        for (int i = 0; i < percepts.length; i++) {
             perceptString.append(perceptsCopy[i]);
         }
 
@@ -93,73 +144,81 @@ public class MyCreature extends Creature {
         for (int i = 4; i <= 5; i++) {
             foodString.append(perceptsCopy[i]);
         }
-        //System.out.println(foodString);
 
+        for (int i = 6; i < percepts.length; i++) {
+            ripeString.append(percepts[i]);
+        }
+
+        //System.out.println(foodString);
         //codes return value from 0 to 8 depending on location of nearest monster, creature, food etc.
         int monsterCode = Integer.parseInt(monsterString.toString(), 3);
         int creatureCode = Integer.parseInt(creatureString.toString(), 3);
         int foodCode = Integer.parseInt(foodString.toString(), 3);
         int perceptCode = Integer.parseInt(perceptString.toString(), 3);
+        int ripeCode = Integer.parseInt(ripeString.toString(), 2);
 
-        //System.out.println(monsterCode);
-        //System.out.println(creatureCode);
-        //System.out.println(foodCode);
-        //check monsters
-        int offset = 0;
-        if (monsterCode != 4) {
-            int actionCode = this.chromosome[monsterCode + offset];
-            System.out.println(actionCode);
-            actions = Actions.pickAction(actionCode);
-            
-
-        } else {
-            if (foodCode != 4) {
-                offset = 10;
-                
-            }else{
-                offset = 20;
-                int green = 6;
-                int red = 7;
-                if (percepts[green]==2){
-                    int actionCode = this.chromosome[foodCode + offset];
-                    actions = Actions.pickAction(actionCode);
-                    
-                }
-            }
+        switch (choice) {
+            case 1:
+                return monsterCode;
+            case 2:
+                return foodCode;
+            case 3:
+                return creatureCode;
+            case 4:
+                return ripeCode;
+            case 5:
+                return perceptCode;
+            default:
+                System.out.println("Error choice of percept code incorrect");
+                return -1;
         }
 
-        /*
-        if (monsterCode != 4) {
-            actions = chromosome[monsterCode];
-        } else {
-            //check if food is on square and what state, if no food check creatures
-            if (foodCode == 4) {
-                if (perceptsCopy[6] == 2) {
-                    actions = chromosome[9];
-                } else {
-                    if (perceptsCopy[7] == 2) {
-                        actions = chromosome[10];
-
-                    } else {
-                        //check creatures
-                        if (creatureCode != 4) {
-                            actions = chromosome[creatureCode + 11];
-                        } else {
-                            //all zeros case
-                            actions = chromosome[20];
-                        }
-                    }
-                }
-
-            } else {
-                //check if other food around
-                actions = chromosome[foodCode + 21];
-
-            }
-        }
-         */
-        return actions;
     }
+
+    /**
+     * Chooses random index based on probabilities in chances array.
+     *
+     * @param chances
+     * @return
+     */
+    public int pickIndex(float[] chances) {
+        int index = 0;
+        float number = rand.nextFloat();
+        while (number > chances[index]) {
+            number = number - chances[index];
+            index++;
+        }
+        return index;
+    }
+
+    public float[] generateRandomChance() {
+        float[] chances = new float[11];
+        float sum = 0;
+        for (int i = 0; i < chances.length; i++) {
+            chances[i] = rand.nextFloat();
+            sum += chances[i];
+        }
+
+        //normalise
+        for (int i = 0; i < chances.length; i++) {
+            chances[i] /= sum;
+        }
+        return chances;
+    }
+
+    public float[] randomActionPick(float[] chances) {
+
+        if (chances.length != 11) {
+            System.out.println("Length does not match action vector");
+            System.exit(0);
+        }
+        float[] action;
+        int index = pickIndex(chances);
+        action = Actions.pickAction(index);
+        return action;
+    }
+
+    /*
 
     public void printChromosome() {
         System.out.println("Chromosome : ");
@@ -167,24 +226,35 @@ public class MyCreature extends Creature {
         System.out.println();
 
     }
-
-    public int[] getChromosome() {
-        int[] chromosomeCopy = new int[this.chromosomeLength];
+     */
+    public float[][] getChromosome() {
+        float[][] chromosomeCopy = new float[this.chromosomeLength][];
         for (int gene = 0; gene < this.chromosomeLength; gene++) {
-            chromosomeCopy[gene] = this.chromosome[gene];
+            chromosomeCopy[gene] = Arrays.copyOf(this.chromosome[gene],this.chromosome[gene].length);
         }
         return chromosomeCopy;
     }
-
+    
+    public float[] getStrand(int index){
+        float[] strandCopy = Arrays.copyOf(this.chromosome[index],this.chromosome[index].length);
+        
+        return strandCopy;
+    }
+/*
+    
     public int getChromosomeAt(int index) {
         return chromosome[index];
     }
+     */
+    public void setChromosome(MyCreature creature) {
+        for (int row = 0; row < this.chromosomeLength; row++) {
+            this.chromosome[row] = Arrays.copyOf(creature.chromosome[row], creature.chromosome[row].length);
+        }
 
-    public void setChromosome(int[] chromosome) {
-        this.chromosome = chromosome;
     }
-
+    /*
     public void setChromosome(int value, int index) {
         this.chromosome[index] = value;
     }
+     */
 }
