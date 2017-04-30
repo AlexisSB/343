@@ -154,7 +154,7 @@ public class MyWorld extends World {
         // you define your fitness function.  You should add a print out or
         // some visual display of average fitness over generations.
         avgLifeTime /= (float) numCreatures;
-        avgFitness = fitnessSum/(float) numCreatures;
+        avgFitness = fitnessSum / (float) numCreatures;
         System.out.println("Simulation stats:");
         System.out.println("  Survivors    : " + nSurvivors + " out of " + numCreatures);
         System.out.println("  Avg life time: " + avgLifeTime + " turns");
@@ -171,12 +171,13 @@ public class MyWorld extends World {
 
         //Roulette Selection
         //Set up array for roulette selection
+        /*
         float[] rouletteFitness = Arrays.copyOf(old_fitness, numCreatures);
         for (int i = 0; i < numCreatures; i++) {
             rouletteFitness[i] /= fitnessSum;
         }
         System.out.println(Arrays.toString(rouletteFitness));
-        
+
         if (numCreatures == 1) {
             for (int i = 0; i < numCreatures; i++) {
                 new_population[i] = old_population[i];
@@ -205,7 +206,6 @@ public class MyWorld extends World {
                     //System.out.println(Arrays.toString(geneParent1));
                     //System.out.println(Arrays.toString(geneParent2));
                     //System.out.println(Arrays.toString(geneChild));
-
                     for (int subIndex = 0; subIndex < numActions; subIndex++) {
                         geneChild[subIndex] = (geneParent1[subIndex] + geneParent2[subIndex]) / 2;
                     }
@@ -240,10 +240,75 @@ public class MyWorld extends World {
         for (int i = 0; i < numCreatures; i++) {
             new_population[i] = old_population[i];
         }
-                 */
+                 
                 // Return new population of cratures.
             }
         }
+*/
+
+        //Tournament Selection
+        if (numCreatures == 1) {
+            for (int i = 0; i < numCreatures; i++) {
+                new_population[i] = old_population[i];
+            }
+        } else {
+
+            //Start new population loop
+            for (int creature = 0; creature < numCreatures; creature++) {
+                int sizeOfSubset = numCreatures / 2;
+                int startingIndex = rand.nextInt(sizeOfSubset);
+                float maximum = old_fitness[startingIndex];
+                int parent1Index = startingIndex;
+
+                //pick parent1
+                for (int i = startingIndex + 1; i < startingIndex + sizeOfSubset; i++) {
+                    if (old_fitness[i] > maximum) {
+                        maximum = old_fitness[i];
+                        parent1Index = i;
+                    }
+                }
+
+                //pick parent2
+                int parent2Index = startingIndex;
+                maximum = old_fitness[startingIndex];
+                for (int i = startingIndex + 1; i < startingIndex + sizeOfSubset; i++) {
+                    if (parent2Index != parent1Index) {
+                        if (old_fitness[i] > maximum) {
+                            maximum = old_fitness[i];
+                            parent2Index = i;
+                        } else {
+                            parent2Index++;
+                        }
+                    }
+                }
+
+                MyCreature parent1 = old_population[parent1Index];
+                MyCreature parent2 = old_population[parent2Index];
+                MyCreature child = new MyCreature(numPercepts, numActions);
+                //crossover
+                //takes average of parents
+                for (int index = 0; index < child.chromosomeLength; index++) {
+                    float[] geneParent1 = parent1.getStrand(index);
+                    float[] geneParent2 = parent2.getStrand(index);
+                    float[] geneChild = new float[numActions];
+
+                    //System.out.println(Arrays.toString(geneParent1));
+                    //System.out.println(Arrays.toString(geneParent2));
+                    //System.out.println(Arrays.toString(geneChild));
+                    for (int subIndex = 0; subIndex < numActions; subIndex++) {
+                        geneChild[subIndex] = (geneParent1[subIndex] + geneParent2[subIndex]) / 2;
+                    }
+                    //System.out.println(Arrays.toString(geneChild));
+
+                }
+
+                //System.out.println(Arrays.toString(parent1.getChromosome()[0]));
+                //System.out.println(Arrays.toString(parent2.getChromosome()[0]));
+                //System.out.println(Arrays.toString(child.getChromosome()[0]));
+                new_population[creature] = child;
+            }
+        }
+
         return new_population;
     }
 
@@ -263,7 +328,7 @@ public class MyWorld extends World {
                 float baseFitness = (population[creature].timeOfDeath() * turnBias) + population[creature].getEnergy();
                 //float normalisedFitness = baseFitness / denominator;
                 //fitness[creature] = normalisedFitness;
-                 fitness[creature] = baseFitness;
+                fitness[creature] = baseFitness;
             }
 
         }
