@@ -28,12 +28,15 @@ public class MyCreature extends Creature {
         //int rowLength = (int) Math.pow(3, numPercepts);
         //intiailse length of chromosome
         //this.chromosomeLength = (int) Math.pow(3, numPercepts) * numActions;
-        this.chromosomeLength = 30;
+        this.chromosomeLength = 32;
         this.chromosome = new float[this.chromosomeLength][];
-        for (int row = 0; row < this.chromosome.length; row++) {
+        for (int row = 0; row < this.chromosome.length-1; row++) {
             this.chromosome[row] = generateRandomChance();
             //System.out.println(chromosome[row][col]);
         }
+        //hunger gene.
+        this.chromosome[31]= new float[1];
+        this.chromosome[31][0] = rand.nextFloat();
 
         //System.out.println((Arrays.toString(chromosome[0])));
         //System.out.println((Arrays.toString(chromosome[1])));
@@ -97,7 +100,8 @@ public class MyCreature extends Creature {
         } else {
             if (ripeCode != 27) {
                 //your sitting on food
-                chances = chromosome[ripeCode];
+                actions = rollHunger();
+                //chances = chromosome[ripeCode];
             } else {
                 if (foodCode != 13) {
                     //there is food nearby
@@ -106,6 +110,8 @@ public class MyCreature extends Creature {
                     if (creatureCode != 22) {
                         //creature nearyby
                         chances = chromosome[creatureCode];
+                    }else{
+                        chances = chromosome[30];
                     }
                 }
             }
@@ -118,6 +124,17 @@ public class MyCreature extends Creature {
 
         return actions;
     }
+    
+    public float[] rollHunger(){
+        float[] actions = new float[11];
+        if (this.chromosome[31][0]>rand.nextFloat()){
+            actions = Actions.eat;
+        }else{
+            actions = Actions.moveRandom;
+        }
+         return actions;   
+    }
+    
 
     public int generatePerceptCode(int[] percepts, int choice) {
         int[] perceptsCopy = addOneToPercepts(percepts);

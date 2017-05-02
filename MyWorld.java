@@ -18,7 +18,7 @@ public class MyWorld extends World {
    * and the number of generations that the genetic algorithm will 
    * execute.
      */
-    private final int _numTurns = 60;
+    private final int _numTurns = 100;
     private final int _numGenerations = 500;
 
     /* Constructor.  
@@ -295,7 +295,7 @@ public class MyWorld extends World {
                     //System.out.println(Arrays.toString(geneParent1));
                     //System.out.println(Arrays.toString(geneParent2));
                     //System.out.println(Arrays.toString(geneChild));
-                    for (int subIndex = 0; subIndex < numActions; subIndex++) {
+                    for (int subIndex = 0; subIndex < geneParent1.length; subIndex++) {
                         geneChild[subIndex] = (geneParent1[subIndex] + geneParent2[subIndex]) / 2;
                     }
                     //System.out.println(Arrays.toString(geneChild));
