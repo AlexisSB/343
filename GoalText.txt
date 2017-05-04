@@ -1,0 +1,5 @@
+1. Test elitism again.
+2. Refactor elitism
+3. Check the chromosome size.
+4. Get the parent selection to work.
+
