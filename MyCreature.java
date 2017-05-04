@@ -16,12 +16,13 @@ public class MyCreature extends Creature {
     // Random number generator
     Random rand = new Random();
     //float[][] chromosome;
-    float[][] monsterGenes;
-    float[][] foodGenes;
-    float[][] creatureGenes;
+    private float[][] monsterGenes;
+    private float[][] foodGenes;
+    private float[][] creatureGenes;
+    private float[][] exploreGene;
     //int chromosomeLength;
-    float greenHunger;
-    float redHunger;
+    private float greenHunger;
+    private float redHunger;
 
 
     /* Empty constructor - might be a good idea here to put the code that 
@@ -36,25 +37,44 @@ public class MyCreature extends Creature {
         //this.chromosome = new float[chromosomeLength][];
         this.greenHunger = rand.nextFloat();
         this.redHunger = rand.nextFloat();
-        this.chromosomeLength = 28;
-        this.chromosome = new float[this.chromosomeLength][];
-        for (int row = 0; row < this.chromosome.length - 1; row++) {
-            this.chromosome[row] = generateRandomChance();
-            System.out.println(Arrays.toString(chromosome[row]));
+
+        this.monsterGenes = new float[9][];
+        this.foodGenes = new float[9][];
+        this.creatureGenes = new float[9][];
+        this.exploreGene = new float[9][];
+
+        fillArrayWithRandomChances(monsterGenes);
+        fillArrayWithRandomChances(foodGenes);
+        fillArrayWithRandomChances(creatureGenes);
+        fillArrayWithRandomChances(exploreGene);
+
+    }
+
+    public void fillArrayWithRandomChances(float[][] gene) {
+        for (int row = 0; row < gene.length; row++) {
+            gene[row] = generateRandomChance();
+            //System.out.println(Arrays.toString(gene[row]));
         }
-      
 
     }
 
     public MyCreature() {
+
         this.greenHunger = rand.nextFloat();
         this.redHunger = rand.nextFloat();
-        this.chromosomeLength = 28;
-        this.chromosome = new float[this.chromosomeLength][];
-        for (int row = 0; row < this.chromosome.length - 1; row++) {
-            this.chromosome[row] = generateRandomChance();
-            //System.out.println(chromosome[row][col]);
-        }
+        this.greenHunger = rand.nextFloat();
+        this.redHunger = rand.nextFloat();
+
+        this.monsterGenes = new float[9][];
+        this.foodGenes = new float[9][];
+        this.creatureGenes = new float[9][];
+        this.exploreGene = new float[1][];
+
+        fillArrayWithRandomChances(monsterGenes);
+        fillArrayWithRandomChances(foodGenes);
+        fillArrayWithRandomChances(creatureGenes);
+        fillArrayWithRandomChances(exploreGene);
+
     }
 
     /* This function must be overridden by MyCreature, because it implements
@@ -81,8 +101,8 @@ public class MyCreature extends Creature {
         //System.out.println(Arrays.toString(percepts));
         float actions[] = new float[numExpectedActions];
         int monsterCode = generatePerceptCode(percepts, 1);
-        int foodCode = generatePerceptCode(percepts, 2) + 9;
-        int creatureCode = generatePerceptCode(percepts, 3) + 18;
+        int foodCode = generatePerceptCode(percepts, 2);
+        int creatureCode = generatePerceptCode(percepts, 3);
         int ripeCode = generatePerceptCode(percepts, 4);
         //System.out.println(ripeCode);
         /*
@@ -107,7 +127,7 @@ public class MyCreature extends Creature {
         float[] chances = new float[numExpectedActions];
 
         if (monsterCode != 4) {
-            chances = chromosome[monsterCode];
+            chances = this.monsterGenes[monsterCode];
             //there is monster nearby
         } else {
             if (ripeCode != 0) {
@@ -116,15 +136,15 @@ public class MyCreature extends Creature {
                 return actions;
 
             } else {
-                if (foodCode != 13) {
+                if (foodCode != 4) {
                     //there is food nearby
-                    chances = chromosome[foodCode];
+                    chances = this.foodGenes[foodCode];
                 } else {
-                    if (creatureCode != 22) {
+                    if (creatureCode != 4) {
                         //creature nearyby
-                        chances = chromosome[creatureCode];
+                        chances = this.creatureGenes[creatureCode];
                     } else {
-                        chances = chromosome[27];
+                        chances = this.exploreGene[0];
                     }
                 }
             }
@@ -260,11 +280,54 @@ public class MyCreature extends Creature {
         return index;
     }
 
-    public float[] getStrand(int index) {
-        float[] strandCopy = Arrays.copyOf(this.chromosome[index], this.chromosome[index].length);
-
-        return strandCopy;
+    public float[][] getMonsterGenes() {
+        return this.monsterGenes;
     }
+
+    public float[][] getFoodGenes() {
+        return this.foodGenes;
+    }
+
+    public float[][] getCreatureGenes() {
+        return this.creatureGenes;
+    }
+
+    public float[][] getExploreGenes() {
+        return this.exploreGene;
+    }
+
+    public float getGreenHunger() {
+        return this.greenHunger;
+    }
+    
+    public float getRedHunger(){
+        return this.redHunger;
+    }
+    
+    public void setMonsterGenes(float[][] newGenes) {
+        this.monsterGenes= newGenes;
+    }
+
+    public void setFoodGenes(float[][] newGenes) {
+        this.foodGenes = newGenes;
+    }
+
+    public void setCreatureGenes(float[][] newGenes) {
+        this.creatureGenes= newGenes;
+    }
+
+    public void setExploreGenes(float[][] newGenes) {
+        this.exploreGene= newGenes;
+    }
+
+    public void setGreenHunger(float newHunger) {
+        this.greenHunger = newHunger;
+    }
+    
+    public void setRedHunger(float newHunger) {
+        this.redHunger = newHunger;
+    }
+    
     
 
 }

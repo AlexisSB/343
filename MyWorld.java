@@ -19,7 +19,7 @@ public class MyWorld extends World {
    * execute.
      */
     private final int _numTurns = 100;
-    private final int _numGenerations = 500;
+    private final int _numGenerations = 1000;
 
     /* Constructor.  
    
@@ -46,9 +46,9 @@ public class MyWorld extends World {
     public static void main(String[] args) {
         // Here you can specify the grid size, window size and whether torun
         // in repeatable mode or not
-        int gridSize = 5;
-        int windowWidth = 1600;
-        int windowHeight = 900;
+        int gridSize = 24;
+        int windowWidth = 1200;
+        int windowHeight = 1200;
         boolean repeatableMode = true;
 
         /* Here you can specify percept format to use - there are three to
@@ -162,6 +162,23 @@ public class MyWorld extends World {
         // example code uses all the creatures from the old generation in the
         // new generation.
 
+        //Elitism
+        int numberOfElites = numCreatures / 4;
+        TreeMap tm = new TreeMap();
+
+        for (int i = 0; i < numCreatures; i++) {
+            tm.put(getFitness(old_population[i]), i);
+        }
+
+        //System.out.println(tm.toString());
+        //want last entry
+        for (int i = 0; i < numberOfElites; i++) {
+            int index = ((Integer) tm.get(tm.lastKey()));
+            tm.remove(tm.lastKey());
+            new_population[i] = old_population[index];
+            //System.out.println(new_population[i]);
+        }
+
         // Roulette Selection //Set up array for roulette selection
         float[] rouletteFitness = Arrays.copyOf(oldFitness, numCreatures);
         for (int i = 0; i < numCreatures; i++) {
@@ -174,23 +191,6 @@ public class MyWorld extends World {
 
         } else {
 
-            //Elitism
-            int numberOfElites = numCreatures / 4;
-            TreeMap tm = new TreeMap();
-
-            for (int i = 0; i < numCreatures; i++) {
-                tm.put(getFitness(old_population[i]), i);
-            }
-
-            //System.out.println(tm.toString());
-            //want last entry
-            for (int i = 0; i < numberOfElites; i++) {
-                int index = ((Integer) tm.get(tm.lastKey()));
-                tm.remove(tm.lastKey());
-                new_population[i] = old_population[index];
-                //System.out.println(new_population[i]);
-            }
-
             for (int creature = numberOfElites; creature < numCreatures; creature++) {
                 //parent pick
                 MyCreature parent1 = old_population[pickParentIndex(rouletteFitness)];
@@ -202,21 +202,120 @@ public class MyWorld extends World {
                 //may want to create copy instead of copying pointer
                 MyCreature child = new MyCreature();
                 //crossover    //takes average of parents
-                child.greenHunger = (parent1.greenHunger + parent2.greenHunger) / 2;
-                child.redHunger = (parent1.redHunger + parent2.redHunger) / 2;
 
-                for (int index = 0; index < child.chromosomeLength; index++) {
-                    float[] geneParent1 = parent1.getStrand(index);
-                    float[] geneParent2 = parent2.getStrand(index);
-                    float[] geneChild = new float[11];
-                    //System.out.println(Arrays.toString(geneParent1));
-                    //System.out.println(Arrays.toString(geneParent2));
-                    //System.out.println(Arrays.toString(geneChild));
-                    for (int subIndex = 0; subIndex < 11; subIndex++) {
-                        geneChild[subIndex] = (geneParent1[subIndex] + geneParent2[subIndex]) / 2;
-                    }
-                    System.out.println(Arrays.toString(geneChild));
+                //crossover green hunger
+                //check mutation first//mutation overwrites learned hunger.
+                float mutationChance = 0.02f;
+                if (rollChance(mutationChance)) {
+                    child.setGreenHunger(rand.nextFloat());
+                } else {
+                    float newGreenHunger = parent1.getGreenHunger();
+                    newGreenHunger += parent2.getRedHunger();
+                    newGreenHunger /= 2;
+                    child.setGreenHunger(newGreenHunger);
                 }
+
+                //cross over red hunger
+                mutationChance = 0.02f;
+                if (rollChance(mutationChance)) {
+                    child.setRedHunger(rand.nextFloat());
+                } else {
+                    float newRedHunger = parent1.getRedHunger();
+                    newRedHunger += parent2.getRedHunger();
+                    newRedHunger /= 2;
+                    child.setRedHunger(newRedHunger);
+                    //site for mutation
+                }
+
+                //cross over monsterGenes
+                float[][] parent1MonsterGenes = parent1.getMonsterGenes();
+                float[][] parent2MonsterGenes = parent2.getMonsterGenes();
+                float[][] childMonsterGenes = child.getMonsterGenes();
+
+                mutationChance = 0.05f;
+
+                for (int row = 0; row < childMonsterGenes.length; row++) {
+                    if (rollChance(mutationChance)) {
+                        childMonsterGenes[row] = child.generateRandomChance();
+                    } else {
+                        for (int col = 0; col < childMonsterGenes[row].length; col++) {
+                            float newGene = parent1MonsterGenes[row][col];
+                            newGene += parent2MonsterGenes[row][col];
+                            newGene /= 2;
+                            childMonsterGenes[row][col] = newGene;
+                        }
+                    }
+
+                }
+
+                child.setMonsterGenes(childMonsterGenes);
+
+                //cross over food Genes
+                float[][] parent1FoodGenes = parent1.getFoodGenes();
+                float[][] parent2FoodGenes = parent2.getFoodGenes();
+                float[][] childFoodGenes = child.getFoodGenes();
+
+                mutationChance = 0.05f;
+
+                for (int row = 0; row < childFoodGenes.length; row++) {
+                    if (rollChance(mutationChance)) {
+                        childFoodGenes[row] = child.generateRandomChance();
+                    } else {
+                        for (int col = 0; col < childFoodGenes[row].length; col++) {
+                            float newGene = parent1FoodGenes[row][col];
+                            newGene += parent2FoodGenes[row][col];
+                            newGene /= 2;
+                            childFoodGenes[row][col] = newGene;
+                        }
+                    }
+                }
+
+                child.setFoodGenes(childFoodGenes);
+
+                //cross over CreatureGenes
+                float[][] parent1CreatureGenes = parent1.getCreatureGenes();
+                float[][] parent2CreatureGenes = parent2.getCreatureGenes();
+                float[][] childCreatureGenes = child.getCreatureGenes();
+
+                mutationChance = 0.05f;
+
+                for (int row = 0; row < childCreatureGenes.length; row++) {
+                    if (rollChance(mutationChance)) {
+                        childCreatureGenes[row] = child.generateRandomChance();
+                    } else {
+                        for (int col = 0; col < childCreatureGenes[row].length; col++) {
+                            float newGene = parent1CreatureGenes[row][col];
+                            newGene += parent2CreatureGenes[row][col];
+                            newGene /= 2;
+                            childCreatureGenes[row][col] = newGene;
+                        }
+                    }
+                }
+
+                child.setCreatureGenes(childCreatureGenes);
+
+                //cross over exploreGene
+                float[][] parent1ExploreGenes = parent1.getExploreGenes();
+                float[][] parent2ExploreGenes = parent2.getExploreGenes();
+                float[][] childExploreGenes = child.getExploreGenes();
+                
+                mutationChance = 0.05f;
+
+                for (int row = 0; row < childExploreGenes.length; row++) {
+                    if (rollChance(mutationChance)) {
+                        childExploreGenes[row] = child.generateRandomChance();
+                    } else {
+                        for (int col = 0; col < childExploreGenes[row].length; col++) {
+                            float newGene = parent1ExploreGenes[row][col];
+                            newGene += parent2ExploreGenes[row][col];
+                            newGene /= 2;
+                            childExploreGenes[row][col] = newGene;
+                        }
+                    }
+                    
+                }
+
+                child.setExploreGenes(childExploreGenes);
 
                 new_population[creature] = child;
             }
@@ -288,6 +387,14 @@ public class MyWorld extends World {
         }
         return fitness;
 
+    }
+
+    public boolean rollChance(float chance) {
+        if (chance > rand.nextFloat()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }

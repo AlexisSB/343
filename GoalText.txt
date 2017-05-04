@@ -1,5 +1,13 @@
-1. Test elitism again.
-2. Refactor elitism
-3. Check the chromosome size.
-4. Get the parent selection to work.
+1. Test elitism again. DONE
+2. Refactor elitism 
+3. Check the chromosome size. DONE
+4. Refactored chromosome DONE.
+4. Get the parent selection to work. DONE.
+5. How to address multiple monsters
+6. Possible Percept change
+7. How to add mutation? CURRENT
+7a. Add mutation override to random.
+7b. Add softer mutation
+8. How many creatures are good creatures?
+
 
