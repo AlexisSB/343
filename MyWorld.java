@@ -232,7 +232,7 @@ public class MyWorld extends World {
                 float[][] parent2MonsterGenes = parent2.getMonsterGenes();
                 float[][] childMonsterGenes = child.getMonsterGenes();
 
-                mutationChance = 0.05f;
+                mutationChance = 0.01f;
 
                 for (int row = 0; row < childMonsterGenes.length; row++) {
                     if (rollChance(mutationChance)) {
@@ -255,7 +255,7 @@ public class MyWorld extends World {
                 float[][] parent2FoodGenes = parent2.getFoodGenes();
                 float[][] childFoodGenes = child.getFoodGenes();
 
-                mutationChance = 0.05f;
+                mutationChance = 0.01f;
 
                 for (int row = 0; row < childFoodGenes.length; row++) {
                     if (rollChance(mutationChance)) {
@@ -277,7 +277,7 @@ public class MyWorld extends World {
                 float[][] parent2CreatureGenes = parent2.getCreatureGenes();
                 float[][] childCreatureGenes = child.getCreatureGenes();
 
-                mutationChance = 0.05f;
+                mutationChance = 0.01f;
 
                 for (int row = 0; row < childCreatureGenes.length; row++) {
                     if (rollChance(mutationChance)) {
