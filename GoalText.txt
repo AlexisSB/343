@@ -6,8 +6,8 @@
 5. How to address multiple monsters
 6. Possible Percept change
 7. How to add mutation? CURRENT
-7a. Add mutation override to random.
-7b. Add softer mutation
+7a. Add mutation override to random.DONE
+7b. Add softer mutation - over expression mutation.DONE
 8. How many creatures are good creatures?
 
 
