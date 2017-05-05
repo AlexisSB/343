@@ -49,7 +49,18 @@ public class MyWorld extends World {
     public static void main(String[] args) {
         // Here you can specify the grid size, window size and whether torun
         // in repeatable mode or not
-        int gridSize = 24;
+        
+        float[] outputs =NeuralNetwork.inputFunction(NeuralNetwork.inputs,NeuralNetwork.weights);
+        for (int i =0;i<outputs.length;i++){
+            outputs[i]=NeuralNetwork.reluFunction(outputs[i]);
+        }
+        System.out.println(Arrays.toString(outputs));
+        
+        NeuralNetwork.normalise(outputs);
+        System.out.println(Arrays.toString(outputs));
+        
+        
+        int gridSize = 5;
         int windowWidth = 1200;
         int windowHeight = 1200;
         boolean repeatableMode = true;
