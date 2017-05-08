@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-import java.util.Arrays;
+import java.util.*;
 
 /**
  *
@@ -12,17 +12,28 @@ import java.util.Arrays;
  */
 public class NeuralNetwork {
 
+    static final Random rand = new Random();
+
     //don't forget to add bias -1 to end of inputs
     // Add bias weights to end last row of weights
     // 1x10 time 10x11
-    static float[][] inputs = {{1, 1, 1, 1, 1, 1, 1, 1, 1, -1}};
-    static float[][] weights = {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1}};
+    static int numInputs = 9;
+    static float[][] inputs = new float[1][numInputs];
+    static int numFirstNodes = 8;
+    static int numSecondNodes = 8;
+
+    static float[][] firstNodeWeights = new float[9][numFirstNodes];
+    static float[][] testCross = new float[9][numFirstNodes];
+    //static float[][] secondNodeWeights = new float[numFirstNodes][11];
 
     public static void main(String[] args) {
-        System.out.println(Arrays.toString(NeuralNetwork.inputFunction(inputs, weights)));
+        for (int row = 0; row < firstNodeWeights.length; row++) {
+            for (int col = 0; col < firstNodeWeights[row].length; col++) {
+                firstNodeWeights[row][col] = rand.nextFloat();
+            }
+        }
+
+        //System.out.println(Arrays.toString(NeuralNetwork.inputFunction(inputs, weights)));
     }
 
     /**
@@ -38,20 +49,19 @@ public class NeuralNetwork {
             return 0;
         }
     }
-    
-    public static float[] normalise(float[] inputs){
+
+    //public static linearFunction
+    public static float[] normalise(float[] inputs) {
         float sum = 0;
-        for (int i = 0; i<inputs.length; i++){
+        for (int i = 0; i < inputs.length; i++) {
             sum += inputs[i];
         }
-        System.out.println(sum);
-        for (int i = 0; i<inputs.length; i++){
+        //System.out.println(sum);
+        for (int i = 0; i < inputs.length; i++) {
             inputs[i] /= sum;
         }
         return inputs;
     }
-    
-    
 
     /**
      * input function =wT*x-w0; results 2D should be 1x11
@@ -69,6 +79,25 @@ public class NeuralNetwork {
             }
         }
         return output;
+    }
+
+    public static float[][] crossOverWeights(float[][] weights1, float[][] weights2, float error1, float error2) {
+        if (weights1.length == weights2.length) {
+            float[][] crossedWeights = weights1;
+            for (int row = 0; row < weights1.length; row++) {
+                for (int col = 0; col < weights1[row].length; col++) {
+                    float newWeight = weights1[row][col]*error1;
+                    newWeight += weights2[row][col]*error2;
+                    //newWeight /= 2;
+                    crossedWeights[row][col] = newWeight;
+                }
+            }
+
+            return crossedWeights;
+        } else {
+            System.out.println("Error weights size mismatch");
+            return new float[0][0];
+        }
     }
 
 }

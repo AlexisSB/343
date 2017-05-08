@@ -52,7 +52,7 @@ public class Matrix{
   public static void toString(float[][] matrix){
     int rows = matrix.length;
     //System.out.println(rows);
-    int columns = matrix[0].length;
+    //int columns = matrix[0].length;
     
     for ( int i  = 0 ; i < rows ; i++ ){
       System.out.println(Arrays.toString(matrix[i]));

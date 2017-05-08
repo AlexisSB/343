@@ -16,13 +16,14 @@ public class MyCreature extends Creature {
     // Random number generator
     Random rand = new Random();
     //float[][] chromosome;
-    private float[][] monsterGenes;
-    private float[][] foodGenes;
-    private float[][] creatureGenes;
-    private float[][] exploreGene;
+    //private float[][] monsterGenes;
+    //private float[][] foodGenes;
+    //private float[][] creatureGenes;
+    //private float[][] exploreGene;
+    private float[][] genes;
     //int chromosomeLength;
-    private float greenHunger;
-    private float redHunger;
+    //private float greenHunger;
+    //private float redHunger;
 
 
     /* Empty constructor - might be a good idea here to put the code that 
@@ -33,21 +34,16 @@ public class MyCreature extends Creature {
                       to produce on every turn
      */
     public MyCreature(int numPercepts, int numActions) {
-        //this.chromosomeLength = 1;
-        //this.chromosome = new float[chromosomeLength][];
-        this.greenHunger = rand.nextFloat();
-        this.redHunger = rand.nextFloat();
-
-        this.monsterGenes = new float[9][];
-        this.foodGenes = new float[9][];
-        this.creatureGenes = new float[9][];
-        this.exploreGene = new float[9][];
-
-        fillArrayWithRandomChances(monsterGenes);
-        fillArrayWithRandomChances(foodGenes);
-        fillArrayWithRandomChances(creatureGenes);
-        fillArrayWithRandomChances(exploreGene);
-
+        int numRows = numPercepts + 1;
+        int numColumns = numActions;
+        genes = new float[numRows][numColumns];
+        for (int row = 0; row < this.genes.length; row++) {
+            for (int col = 0; col < this.genes[row].length; col++) {
+                genes[row][col] = rand.nextFloat();
+            }
+        }
+        //Matrix.toString(genes);
+        //System.out.println("End");
     }
 
     public void fillArrayWithRandomChances(float[][] gene) {
@@ -58,22 +54,8 @@ public class MyCreature extends Creature {
 
     }
 
-    public MyCreature() {
-
-        this.greenHunger = rand.nextFloat();
-        this.redHunger = rand.nextFloat();
-        this.greenHunger = rand.nextFloat();
-        this.redHunger = rand.nextFloat();
-
-        this.monsterGenes = new float[9][];
-        this.foodGenes = new float[9][];
-        this.creatureGenes = new float[9][];
-        this.exploreGene = new float[1][];
-
-        fillArrayWithRandomChances(monsterGenes);
-        fillArrayWithRandomChances(foodGenes);
-        fillArrayWithRandomChances(creatureGenes);
-        fillArrayWithRandomChances(exploreGene);
+    public MyCreature(float[][] genes) {
+        this.genes = genes;
 
     }
 
@@ -100,76 +82,29 @@ public class MyCreature extends Creature {
         // the percepts.  You need to replace this code.
         //System.out.println(Arrays.toString(percepts));
         float actions[] = new float[numExpectedActions];
-        int monsterCode = generatePerceptCode(percepts, 1);
-        int foodCode = generatePerceptCode(percepts, 2);
-        int creatureCode = generatePerceptCode(percepts, 3);
-        int ripeCode = generatePerceptCode(percepts, 4);
-        //System.out.println(ripeCode);
-        /*
-        if (percepts[6] == 1) {
-            actions = rollHunger(ripeCode);
-            //System.out.println("eat");
-        } else if (percepts[7] == 1) {
-            actions = rollHunger(ripeCode);
-            //System.out.println("eat");
-        } else {
 
-            for (int i = 0; i < numExpectedActions; i++) {
-                actions[i] = rand.nextFloat();
-            }
+        //Sets up percepts for multiplication
+        //plus one for bias weight == -1
+        float[][] percepts2D = new float[1][numPercepts + 1];
+        for (int col = 0; col < percepts2D[0].length - 1; col++) {
+            percepts2D[0][col] = (float) percepts[col];
         }
-         */
-
-        //System.out.println(monsterCode);
-        //System.out.println(foodCode);
-        //System.out.println(creatureCode);
-        //System.out.println(ripeCode);
+        percepts2D[0][numPercepts] = -1f;
+               
         float[] chances = new float[numExpectedActions];
 
-        if (monsterCode != 4) {
-            chances = this.monsterGenes[monsterCode];
-            //there is monster nearby
-        } else {
-            if (ripeCode != 0) {
-                //you're sitting on food
-                actions = rollHunger(ripeCode);
-                return actions;
+        //inputfunciton matrix multiplication
+        chances = NeuralNetwork.inputFunction(percepts2D, this.genes);
 
-            } else {
-                if (foodCode != 4) {
-                    //there is food nearby
-                    chances = this.foodGenes[foodCode];
-                } else {
-                    if (creatureCode != 4) {
-                        //creature nearyby
-                        chances = this.creatureGenes[creatureCode];
-                    } else {
-                        chances = this.exploreGene[0];
-                    }
-                }
-            }
+        //relu funciton on outputs
+        for (int i = 0; i < chances.length; i++) {
+            chances[i] = NeuralNetwork.reluFunction(chances[i]);
         }
+
+        //softmax
+        NeuralNetwork.normalise(chances);
+
         actions = randomActionPick(chances);
-
-        return actions;
-    }
-
-    public float[] rollHunger(int ripeCode) {
-        float[] actions = new float[11];
-        if (ripeCode == 1) {
-            if (this.redHunger > (float) getEnergy() / 100) {
-                actions = Actions.eat;
-            } else {
-                actions = Actions.moveRandom;
-            }
-        } else if (ripeCode == 2) {
-            if (this.greenHunger > (float) getEnergy() / 100) {
-                actions = Actions.eat;
-            } else {
-                actions = Actions.moveRandom;
-            }
-
-        }
 
         return actions;
     }
@@ -200,62 +135,12 @@ public class MyCreature extends Creature {
         return chances;
     }
 
-    public int generatePerceptCode(int[] percepts, int choice) {
-        int[] perceptsCopy = Arrays.copyOf(percepts, percepts.length);
-        for (int i = 0; i < perceptsCopy.length; i++) {
-            perceptsCopy[i]++;
-        }
-        //System.out.println(Arrays.toString(perceptsCopy));
+    public float[][] getGenes() {
+        return this.genes;
+    }
 
-        StringBuilder perceptString = new StringBuilder();
-        StringBuilder monsterString = new StringBuilder();
-        StringBuilder foodString = new StringBuilder();
-        StringBuilder ripeString = new StringBuilder();
-        StringBuilder creatureString = new StringBuilder();
-
-        for (int i = 0; i < percepts.length; i++) {
-            perceptString.append(perceptsCopy[i]);
-        }
-
-        for (int i = 0; i <= 1; i++) {
-            monsterString.append(perceptsCopy[i]);
-        }
-        //System.out.println(monsterString);
-        for (int i = 2; i <= 3; i++) {
-            creatureString.append(perceptsCopy[i]);
-        }
-        //System.out.println(creatureString);
-        for (int i = 4; i <= 5; i++) {
-            foodString.append(perceptsCopy[i]);
-        }
-
-        for (int i = 6; i < percepts.length; i++) {
-            ripeString.append(percepts[i]);
-        }
-
-        //System.out.println(foodString);
-        //codes return value from 0 to 8 depending on location of nearest monster, creature, food etc.
-        int monsterCode = Integer.parseInt(monsterString.toString(), 3);
-        int creatureCode = Integer.parseInt(creatureString.toString(), 3);
-        int foodCode = Integer.parseInt(foodString.toString(), 3);
-        int perceptCode = Integer.parseInt(perceptString.toString(), 3);
-        int ripeCode = Integer.parseInt(ripeString.toString(), 2);
-
-        switch (choice) {
-            case 1:
-                return monsterCode;
-            case 2:
-                return foodCode;
-            case 3:
-                return creatureCode;
-            case 4:
-                return ripeCode;
-            case 5:
-                return perceptCode;
-            default:
-                System.out.println("Error choice of percept code incorrect");
-                return -1;
-        }
+    public void setGenes(float[][] newGenes) {
+        this.genes = newGenes;
     }
 
     public float[] randomActionPick(float[] chances) {
@@ -279,55 +164,5 @@ public class MyCreature extends Creature {
         }
         return index;
     }
-
-    public float[][] getMonsterGenes() {
-        return this.monsterGenes;
-    }
-
-    public float[][] getFoodGenes() {
-        return this.foodGenes;
-    }
-
-    public float[][] getCreatureGenes() {
-        return this.creatureGenes;
-    }
-
-    public float[][] getExploreGenes() {
-        return this.exploreGene;
-    }
-
-    public float getGreenHunger() {
-        return this.greenHunger;
-    }
-    
-    public float getRedHunger(){
-        return this.redHunger;
-    }
-    
-    public void setMonsterGenes(float[][] newGenes) {
-        this.monsterGenes= newGenes;
-    }
-
-    public void setFoodGenes(float[][] newGenes) {
-        this.foodGenes = newGenes;
-    }
-
-    public void setCreatureGenes(float[][] newGenes) {
-        this.creatureGenes= newGenes;
-    }
-
-    public void setExploreGenes(float[][] newGenes) {
-        this.exploreGene= newGenes;
-    }
-
-    public void setGreenHunger(float newHunger) {
-        this.greenHunger = newHunger;
-    }
-    
-    public void setRedHunger(float newHunger) {
-        this.redHunger = newHunger;
-    }
-    
-    
 
 }

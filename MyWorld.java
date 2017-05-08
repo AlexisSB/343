@@ -49,18 +49,8 @@ public class MyWorld extends World {
     public static void main(String[] args) {
         // Here you can specify the grid size, window size and whether torun
         // in repeatable mode or not
-        
-        float[] outputs =NeuralNetwork.inputFunction(NeuralNetwork.inputs,NeuralNetwork.weights);
-        for (int i =0;i<outputs.length;i++){
-            outputs[i]=NeuralNetwork.reluFunction(outputs[i]);
-        }
-        System.out.println(Arrays.toString(outputs));
-        
-        NeuralNetwork.normalise(outputs);
-        System.out.println(Arrays.toString(outputs));
-        
-        
-        int gridSize = 5;
+
+        int gridSize = 24;
         int windowWidth = 1200;
         int windowHeight = 1200;
         boolean repeatableMode = true;
@@ -76,17 +66,17 @@ public class MyWorld extends World {
         MyWorld sim = new MyWorld(gridSize, windowWidth, windowHeight, repeatableMode, perceptFormat);
     }
 
-
-    /* The MyWorld class must override this function, which is
-     used to fetch a population of creatures at the beginning of the
-     first simulation.  This is the place where you need to  generate
-     a set of creatures with random behaviours.
-  
-     Input: numCreatures - this variable will tell you how many creatures
-                           the world is expecting
-                            
-     Returns: An array of MyCreature objects - the World will expect numCreatures
-              elements in that array     
+    /**
+     * The MyWorld class must override this function, which is used to fetch a
+     * population of creatures at the beginning of the first simulation. This is
+     * the place where you need to generate a set of creatures with random
+     * behaviours.
+     *
+     * Input: numCreatures - this variable will tell you how many creatures the
+     * world is expecting
+     *
+     * Returns: An array of MyCreature objects - the World will expect
+     * numCreatures elements in that array
      */
     @Override
     public MyCreature[] firstGeneration(int numCreatures) {
@@ -104,25 +94,24 @@ public class MyWorld extends World {
         return population;
     }
 
-    /* The MyWorld class must override this function, which is
-     used to fetch the next generation of the creatures.  This World will
-     proivde you with the old_generation of creatures, from which you can
-     extract information relating to how they did in the previous simulation...
-     and use them as parents for the new generation.
-  
-     Input: old_population_btc - the generation of old creatures before type casting. 
-                              The World doesn't know about MyCreature type, only
-                              its parent type Creature, so you will have to
-                              typecast to MyCreatures.  These creatures 
-                              have been simulated over and their state
-                              can be queried to compute their fitness
-            numCreatures - the number of elements in the old_population_btc
-                           array
-                        
-                            
-  Returns: An array of MyCreature objects - the World will expect numCreatures
-           elements in that array.  This is the new population that will be
-           use for the next simulation.  
+    /**
+     * The MyWorld class must override this function, which is used to fetch the
+     * next generation of the creatures. This World will proivde you with the
+     * old_generation of creatures, from which you can extract information
+     * relating to how they did in the previous simulation... and use them as
+     * parents for the new generation.
+     *
+     * Input: old_population_btc - the generation of old creatures before type
+     * casting. The World doesn't know about MyCreature type, only its parent
+     * type Creature, so you will have to typecast to MyCreatures. These
+     * creatures have been simulated over and their state can be queried to
+     * compute their fitness numCreatures - the number of elements in the
+     * old_population_btc array
+     *
+     *
+     * Returns: An array of MyCreature objects - the World will expect
+     * numCreatures elements in that array. This is the new population that will
+     * be use for the next simulation.
      */
     @Override
     public MyCreature[] nextGeneration(Creature[] old_population_btc, int numCreatures) {
@@ -165,7 +154,7 @@ public class MyWorld extends World {
         // you define your fitness function.  You should add a print out or
         // some visual display of average fitness over generations.
         avgLifeTime /= (float) numCreatures;
-        float avgFitness =((float) fitnessSum / numCreatures);
+        float avgFitness = ((float) fitnessSum / numCreatures);
         System.out.println("Simulation stats:");
         System.out.println("  Survivors    : " + nSurvivors + " out of " + numCreatures);
         System.out.println("  Avg life time: " + avgLifeTime + " turns");
@@ -178,7 +167,7 @@ public class MyWorld extends World {
         // example code uses all the creatures from the old generation in the
         // new generation.
         //Elitism
-        int numberOfElites = numCreatures / 4;
+        int numberOfElites = 0;
         TreeMap tm = new TreeMap();
 
         for (int i = 0; i < numCreatures; i++) {
@@ -201,6 +190,7 @@ public class MyWorld extends World {
         }
         //System.out.println(Arrays.toString(rouletteFitness));
         //Start new population loop
+         
         if (numCreatures == 1) {
             new_population[0] = old_population[0];
 
@@ -214,168 +204,27 @@ public class MyWorld extends World {
                 while (parent1 == parent2) {
                     parent2 = old_population[pickParentIndex(rouletteFitness)];
                 }
-                //may want to create copy instead of copying pointer
-                MyCreature child = new MyCreature();
-                //crossover    //takes average of parents
+                //Crossover
+                float[][] weights1 = parent1.getGenes();
+                float[][] weights2 = parent2.getGenes();
+                float maxFitness = ((float) _numTurns * 4) + 100;
+                float fitness1 =getFitness(parent1)/maxFitness;
+                float fitness2 = getFitness(parent2)/maxFitness;
+                //System.out.println("one");
+                //Matrix.toString(weights1);
+                //System.out.println("Two");
+                //Matrix.toString(weights2);
 
-                //crossover green hunger
-                //check mutation first//mutation overwrites learned hunger.
-                float mutationChance = 0.02f;
-                if (rollChance(mutationChance)) {
-                    child.setGreenHunger(rand.nextFloat());
-                } else {
-                    float newGreenHunger = parent1.getGreenHunger();
-                    newGreenHunger += parent2.getRedHunger();
-                    newGreenHunger /= 2;
-                    child.setGreenHunger(newGreenHunger);
-                }
-
-                //cross over red hunger
-                mutationChance = 0.02f;
-                if (rollChance(mutationChance)) {
-                    child.setRedHunger(rand.nextFloat());
-                } else {
-                    float newRedHunger = parent1.getRedHunger();
-                    newRedHunger += parent2.getRedHunger();
-                    newRedHunger /= 2;
-                    child.setRedHunger(newRedHunger);
-                    //site for mutation
-                }
-
-                //cross over monsterGenes
-                float[][] parent1MonsterGenes = parent1.getMonsterGenes();
-                float[][] parent2MonsterGenes = parent2.getMonsterGenes();
-                float[][] childMonsterGenes = child.getMonsterGenes();
-
-                mutationChance = 0.01f;
-
-                for (int row = 0; row < childMonsterGenes.length; row++) {
-                    if (rollChance(mutationChance)) {
-                        //childMonsterGenes[row] = child.generateRandomChance();
-                        float max = parent1MonsterGenes[row][0];
-                        int index = 0;
-                        for (int col = 1; col < childMonsterGenes[row].length; col++) {
-                            if (parent1MonsterGenes[row][col] > max) {
-                                max = parent1MonsterGenes[row][col];
-                                index = col;
-                            }
-                        }
-                        childMonsterGenes[row][index] = 1f;
-                        //System.out.println(Arrays.toString(childMonsterGenes[row]));
-
-                    } else {
-                        for (int col = 0; col < childMonsterGenes[row].length; col++) {
-                            float newGene = parent1MonsterGenes[row][col];
-                            newGene += parent2MonsterGenes[row][col];
-                            newGene /= 2;
-                            childMonsterGenes[row][col] = newGene;
-                        }
-                    }
-
-                }
-
-                child.setMonsterGenes(childMonsterGenes);
-
-                //cross over food Genes
-                float[][] parent1FoodGenes = parent1.getFoodGenes();
-                float[][] parent2FoodGenes = parent2.getFoodGenes();
-                float[][] childFoodGenes = child.getFoodGenes();
-
-                //mutationChance = 0.01f;
-                for (int row = 0; row < childFoodGenes.length; row++) {
-                    if (rollChance(mutationChance)) {
-                        //childFoodGenes[row] = child.generateRandomChance();
-                        //childFoodGenes[row] = child.generateRandomChance();
-                        float max = parent1FoodGenes[row][0];
-                        int index = 0;
-                        for (int col = 1; col < childFoodGenes[row].length; col++) {
-                            if (parent1FoodGenes[row][col] > max) {
-                                max = parent1FoodGenes[row][col];
-                                index = col;
-                            }
-                        }
-                        childFoodGenes[row][index] = 1f;
-                        //System.out.println(Arrays.toString(childFoodGenes[row]));
-                    } else {
-                        for (int col = 0; col < childFoodGenes[row].length; col++) {
-                            float newGene = parent1FoodGenes[row][col];
-                            newGene += parent2FoodGenes[row][col];
-                            newGene /= 2;
-                            childFoodGenes[row][col] = newGene;
-                        }
-                    }
-                }
-
-                child.setFoodGenes(childFoodGenes);
-
-                //cross over CreatureGenes
-                float[][] parent1CreatureGenes = parent1.getCreatureGenes();
-                float[][] parent2CreatureGenes = parent2.getCreatureGenes();
-                float[][] childCreatureGenes = child.getCreatureGenes();
-
-                //mutationChance = 0.01f;
-                for (int row = 0; row < childCreatureGenes.length; row++) {
-                    if (rollChance(mutationChance)) {
-                        //childCreatureGenes[row] = child.generateRandomChance();
-                        float max = parent1CreatureGenes[row][0];
-                        int index = 0;
-                        for (int col = 1; col < childCreatureGenes[row].length; col++) {
-                            if (parent1CreatureGenes[row][col] > max) {
-                                max = parent1CreatureGenes[row][col];
-                                index = col;
-                            }
-                        }
-                        childCreatureGenes[row][index] = 1f;
-                        //System.out.println(Arrays.toString(childCreatureGenes[row]));
-                    } else {
-                        for (int col = 0; col < childCreatureGenes[row].length; col++) {
-                            float newGene = parent1CreatureGenes[row][col];
-                            newGene += parent2CreatureGenes[row][col];
-                            newGene /= 2;
-                            childCreatureGenes[row][col] = newGene;
-                        }
-                    }
-                }
-
-                child.setCreatureGenes(childCreatureGenes);
-
-                //cross over exploreGene
-                float[][] parent1ExploreGenes = parent1.getExploreGenes();
-                float[][] parent2ExploreGenes = parent2.getExploreGenes();
-                float[][] childExploreGenes = child.getExploreGenes();
-
-                //mutationChance = 0.05f;
-                for (int row = 0; row < childExploreGenes.length; row++) {
-                    if (rollChance(mutationChance)) {
-                        //childExploreGenes[row] = child.generateRandomChance();
-                        float max = parent1ExploreGenes[row][0];
-                        int index = 0;
-                        for (int col = 1; col < childExploreGenes[row].length; col++) {
-                            if (parent1ExploreGenes[row][col] > max) {
-                                max = parent1ExploreGenes[row][col];
-                                index = col;
-                            }
-                        }
-                        childExploreGenes[row][index] = 1f;
-                        //System.out.println(Arrays.toString(childMonsterGenes[row]));
-                    } else {
-                        for (int col = 0; col < childExploreGenes[row].length; col++) {
-                            float newGene = parent1ExploreGenes[row][col];
-                            newGene += parent2ExploreGenes[row][col];
-                            newGene /= 2;
-                            childExploreGenes[row][col] = newGene;
-                        }
-                    }
-
-                }
-
-                child.setExploreGenes(childExploreGenes);
+                float[][] newGenes = NeuralNetwork.crossOverWeights(weights1, weights2, fitness1,fitness2) ;
+                MyCreature child = new MyCreature(newGenes);
+                
 
                 new_population[creature] = child;
+                //new_population[creature] = old_population[creature];
             }
-
         }
-        
+
+        /* 
         try{
         FileWriter fw = new FileWriter(DATAFILENAME,true);
         BufferedWriter bw = new BufferedWriter(fw);
@@ -389,8 +238,9 @@ public class MyWorld extends World {
         }catch(IOException exception){
         
         }
+         */
         return new_population;
-        
+
     }
 
     public float[] calculatePopulationFitness(MyCreature[] population, int numCreatures) {
@@ -439,9 +289,10 @@ public class MyWorld extends World {
     }
 
     public float getFitness(MyCreature creature) {
+
         float fitness = 0.0f;
         int turnBias = 4;
-        float denominator = ((float) _numTurns * turnBias) + 100;
+        
         boolean alive = !(creature.isDead());
         if (alive) {
             float baseFitness = ((float) _numTurns * turnBias) + creature.getEnergy();
