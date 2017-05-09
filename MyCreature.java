@@ -15,17 +15,10 @@ public class MyCreature extends Creature {
 
     // Random number generator
     Random rand = new Random();
-    //float[][] chromosome;
-    //private float[][] monsterGenes;
-    //private float[][] foodGenes;
-    //private float[][] creatureGenes;
-    //private float[][] exploreGene;
     private float[][] genes;
-    //int chromosomeLength;
-    //private float greenHunger;
-    //private float redHunger;
-
-
+    private float[][] outputWeights;
+    
+    
     /* Empty constructor - might be a good idea here to put the code that 
    initialises the chromosome to some random state   
   
@@ -35,13 +28,20 @@ public class MyCreature extends Creature {
      */
     public MyCreature(int numPercepts, int numActions) {
         int numRows = numPercepts + 1;
-        int numColumns = numActions;
-        genes = new float[numRows][numColumns];
+        int numColumns = 8;
+        genes = new float[10][8];
         for (int row = 0; row < this.genes.length; row++) {
             for (int col = 0; col < this.genes[row].length; col++) {
                 genes[row][col] = rand.nextFloat();
             }
         }
+        outputWeights = new float[9][11];
+        for (int row = 0; row < this.outputWeights.length; row++) {
+            for (int col = 0; col < this.outputWeights[row].length; col++) {
+                this.outputWeights[row][col] = rand.nextFloat();
+            }
+        }
+        
         //Matrix.toString(genes);
         //System.out.println("End");
     }
@@ -91,20 +91,39 @@ public class MyCreature extends Creature {
         }
         percepts2D[0][numPercepts] = -1f;
                
-        float[] chances = new float[numExpectedActions];
+        //float[][] firstNode = new float[1][genes[0].length];
+        
 
         //inputfunciton matrix multiplication
-        chances = NeuralNetwork.inputFunction(percepts2D, this.genes);
-
+        float[][] firstNode = NeuralNetwork.inputFunction(percepts2D, this.genes);
+        float[][] firstNode2D = new float[1][9];
         //relu funciton on outputs
-        for (int i = 0; i < chances.length; i++) {
-            chances[i] = NeuralNetwork.reluFunction(chances[i]);
+        //convert to 2D
+        for (int i = 0; i < firstNode.length; i++) {
+            firstNode[0][i] = NeuralNetwork.reluFunction(firstNode[0][i]);
+            
+        }
+        
+        for (int col = 0; col < firstNode2D[0].length - 1; col++) {
+            firstNode2D[0][col] = (float) firstNode[0][col];
+        }
+        firstNode2D[0][8] = -1f;
+        
+        //next output layer
+        float[][] secondNode = NeuralNetwork.inputFunction(firstNode2D, this.outputWeights);
+        
+       
+        //softmax
+        secondNode = NeuralNetwork.normalise(secondNode);
+        
+        //convert to 1D
+        float[] output = new float[numExpectedActions];
+        for (int i = 0; i < output.length; i++) {
+            output[i] = secondNode[0][i];
         }
 
-        //softmax
-        NeuralNetwork.normalise(chances);
-
-        actions = randomActionPick(chances);
+        //actions = randomActionPick(chances);
+        actions = output;
 
         return actions;
     }

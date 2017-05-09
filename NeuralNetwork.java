@@ -51,14 +51,14 @@ public class NeuralNetwork {
     }
 
     //public static linearFunction
-    public static float[] normalise(float[] inputs) {
+    public static float[][] normalise(float[][] inputs) {
         float sum = 0;
-        for (int i = 0; i < inputs.length; i++) {
-            sum += inputs[i];
+        for (int i = 0; i < inputs[0].length; i++) {
+            sum += inputs[0][i];
         }
         //System.out.println(sum);
-        for (int i = 0; i < inputs.length; i++) {
-            inputs[i] /= sum;
+        for (int i = 0; i < inputs[0].length; i++) {
+            inputs[0][i] /= sum;
         }
         return inputs;
     }
@@ -66,29 +66,26 @@ public class NeuralNetwork {
     /**
      * input function =wT*x-w0; results 2D should be 1x11
      */
-    public static float[] inputFunction(float[][] inputs, float[][] weights) {
+    public static float[][] inputFunction(float[][] inputs, float[][] weights) {
         float[][] results = Matrix.multiply(inputs, weights);
-        float[] output = new float[results[0].length];
 
         if (results.length != 1) {
             System.out.println("Error. result vector not a row vector");
+            System.exit(0);
+            return new float[0][0];
         } else {
-
-            for (int i = 0; i < results[0].length; i++) {
-                output[i] = results[0][i];
-            }
+            return results;
         }
-        return output;
     }
 
-    public static float[][] crossOverWeights(float[][] weights1, float[][] weights2, float error1, float error2) {
+    public static float[][] crossOverWeights(float[][] weights1, float[][] weights2) {
         if (weights1.length == weights2.length) {
             float[][] crossedWeights = weights1;
             for (int row = 0; row < weights1.length; row++) {
                 for (int col = 0; col < weights1[row].length; col++) {
-                    float newWeight = weights1[row][col]*error1;
-                    newWeight += weights2[row][col]*error2;
-                    //newWeight /= 2;
+                    float newWeight = weights1[row][col];
+                    newWeight += weights2[row][col];
+                    newWeight /= 2;
                     crossedWeights[row][col] = newWeight;
                 }
             }
@@ -98,6 +95,16 @@ public class NeuralNetwork {
             System.out.println("Error weights size mismatch");
             return new float[0][0];
         }
+    }
+
+    static float[][] trainNN(float[][] weights, float fitness, float maxFitness) {
+        float alpha = 0.05f;
+        for (int row = 0; row < weights.length; row++) {
+            for (int col = 0; col < weights[row].length; col++) {
+                weights[row][col] -= (alpha * (1 - (fitness / maxFitness)));
+            }
+        }
+        return weights;
     }
 
 }

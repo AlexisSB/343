@@ -59,7 +59,7 @@ public class MyWorld extends World {
          chose from: 1, 2, 3.  Refer to the Assignment2 instructions for
          explanation of the three percept formats.
          */
-        int perceptFormat = 1;
+        int perceptFormat = 3;
 
         // Instantiate MyWorld object.  The rest of the application is driven
         // from the window that will be displayed.
@@ -204,19 +204,31 @@ public class MyWorld extends World {
                 while (parent1 == parent2) {
                     parent2 = old_population[pickParentIndex(rouletteFitness)];
                 }
-                //Crossover
+                
+                //training
                 float[][] weights1 = parent1.getGenes();
                 float[][] weights2 = parent2.getGenes();
                 float maxFitness = ((float) _numTurns * 4) + 100;
                 float fitness1 =getFitness(parent1)/maxFitness;
                 float fitness2 = getFitness(parent2)/maxFitness;
-                //System.out.println("one");
+                //System.out.println("before training");
                 //Matrix.toString(weights1);
+                weights1 = NeuralNetwork.trainNN(weights1,fitness1,maxFitness);
+                //System.out.println("after training");
+                //Matrix.toString(weights1);
+                weights2 = NeuralNetwork.trainNN(weights2, fitness2, maxFitness);
+                           
+                
+                //Crossover
+                float[][] newGenes = NeuralNetwork.crossOverWeights(weights1, weights2) ;
+                MyCreature child = new MyCreature(newGenes);
+                
+                
+                
                 //System.out.println("Two");
                 //Matrix.toString(weights2);
 
-                float[][] newGenes = NeuralNetwork.crossOverWeights(weights1, weights2, fitness1,fitness2) ;
-                MyCreature child = new MyCreature(newGenes);
+                
                 
 
                 new_population[creature] = child;
