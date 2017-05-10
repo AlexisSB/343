@@ -20,9 +20,9 @@ public class MyWorld extends World {
    * execute.
      */
     private final int _numTurns = 100;
-    private final int _numGenerations = 2000;
+    private final int _numGenerations = 20000;
 
-    private static final String DATAFILENAME = "dataout.txt";
+    private static final String DATAFILENAME = "dataout2.txt";
 
     /* Constructor.  
    
@@ -58,7 +58,7 @@ public class MyWorld extends World {
          chose from: 1, 2, 3.  Refer to the Assignment2 instructions for
          explanation of the three percept formats.
          */
-        int perceptFormat = 1;
+        int perceptFormat = 3;
 
         // Instantiate MyWorld object.  The rest of the application is driven
         // from the window that will be displayed.
@@ -154,7 +154,7 @@ public class MyWorld extends World {
         // you define your fitness function.  You should add a print out or
         // some visual display of average fitness over generations.
         avgLifeTime /= (float) numCreatures;
-        float avgFitness =((float) fitnessSum / numCreatures);
+        float avgFitness = ((float) fitnessSum / numCreatures);
         System.out.println("Simulation stats:");
         System.out.println("  Survivors    : " + nSurvivors + " out of " + numCreatures);
         System.out.println("  Avg life time: " + avgLifeTime + " turns");
@@ -166,11 +166,10 @@ public class MyWorld extends World {
         // some elitism, you can use old creatures in the next generation.  This
         // example code uses all the creatures from the old generation in the
         // new generation.
-        
         //Elitism
         int numberOfElites = numCreatures / 4;
-        new_population = addElites(new_population,old_population, numberOfElites);
-        
+        new_population = addElites(new_population, old_population, numberOfElites);
+
         // Roulette Selection //Set up array for roulette selection
         float[] rouletteFitness = Arrays.copyOf(oldFitness, numCreatures);
         for (int i = 0; i < numCreatures; i++) {
@@ -198,7 +197,7 @@ public class MyWorld extends World {
                 //crossover green hunger
                 //check mutation first//mutation overwrites learned hunger.
                 float mutationChance = 0.02f;
-                
+
                 if (rollChance(mutationChance)) {
                     child.setGreenHunger(rand.nextFloat());
                 } else {
@@ -225,65 +224,17 @@ public class MyWorld extends World {
                 float[][] parent2MonsterGenes = parent2.getMonsterGenes();
                 float[][] childMonsterGenes = child.getMonsterGenes();
 
-                mutationChance = 0.01f;
+                mutationChance = 0.02f;
 
-                for (int row = 0; row < childMonsterGenes.length; row++) {
-                    if (rollChance(mutationChance)) {
-                        //childMonsterGenes[row] = child.generateRandomChance();
-                        float max = parent1MonsterGenes[row][0];
-                        int index = 0;
-                        for (int col = 1; col < childMonsterGenes[row].length; col++) {
-                            if (parent1MonsterGenes[row][col] > max) {
-                                max = parent1MonsterGenes[row][col];
-                                index = col;
-                            }
-                        }
-                        childMonsterGenes[row][index] = 1f;
-                        //System.out.println(Arrays.toString(childMonsterGenes[row]));
-
-                    } else {
-                        for (int col = 0; col < childMonsterGenes[row].length; col++) {
-                            float newGene = parent1MonsterGenes[row][col];
-                            newGene += parent2MonsterGenes[row][col];
-                            newGene /= 2;
-                            childMonsterGenes[row][col] = newGene;
-                        }
-                    }
-
-                }
-
+                childMonsterGenes = crossOver(child, parent1MonsterGenes, parent2MonsterGenes, mutationChance);
                 child.setMonsterGenes(childMonsterGenes);
 
                 //cross over food Genes
                 float[][] parent1FoodGenes = parent1.getFoodGenes();
                 float[][] parent2FoodGenes = parent2.getFoodGenes();
                 float[][] childFoodGenes = child.getFoodGenes();
-
-                //mutationChance = 0.01f;
-                for (int row = 0; row < childFoodGenes.length; row++) {
-                    if (rollChance(mutationChance)) {
-                        //childFoodGenes[row] = child.generateRandomChance();
-                        //childFoodGenes[row] = child.generateRandomChance();
-                        float max = parent1FoodGenes[row][0];
-                        int index = 0;
-                        for (int col = 1; col < childFoodGenes[row].length; col++) {
-                            if (parent1FoodGenes[row][col] > max) {
-                                max = parent1FoodGenes[row][col];
-                                index = col;
-                            }
-                        }
-                        childFoodGenes[row][index] = 1f;
-                        //System.out.println(Arrays.toString(childFoodGenes[row]));
-                    } else {
-                        for (int col = 0; col < childFoodGenes[row].length; col++) {
-                            float newGene = parent1FoodGenes[row][col];
-                            newGene += parent2FoodGenes[row][col];
-                            newGene /= 2;
-                            childFoodGenes[row][col] = newGene;
-                        }
-                    }
-                }
-
+                
+                childFoodGenes = crossOver(child, parent1FoodGenes, parent2FoodGenes, mutationChance);
                 child.setFoodGenes(childFoodGenes);
 
                 //cross over CreatureGenes
@@ -291,29 +242,7 @@ public class MyWorld extends World {
                 float[][] parent2CreatureGenes = parent2.getCreatureGenes();
                 float[][] childCreatureGenes = child.getCreatureGenes();
 
-                //mutationChance = 0.01f;
-                for (int row = 0; row < childCreatureGenes.length; row++) {
-                    if (rollChance(mutationChance)) {
-                        //childCreatureGenes[row] = child.generateRandomChance();
-                        float max = parent1CreatureGenes[row][0];
-                        int index = 0;
-                        for (int col = 1; col < childCreatureGenes[row].length; col++) {
-                            if (parent1CreatureGenes[row][col] > max) {
-                                max = parent1CreatureGenes[row][col];
-                                index = col;
-                            }
-                        }
-                        childCreatureGenes[row][index] = 1f;
-                        //System.out.println(Arrays.toString(childCreatureGenes[row]));
-                    } else {
-                        for (int col = 0; col < childCreatureGenes[row].length; col++) {
-                            float newGene = parent1CreatureGenes[row][col];
-                            newGene += parent2CreatureGenes[row][col];
-                            newGene /= 2;
-                            childCreatureGenes[row][col] = newGene;
-                        }
-                    }
-                }
+                childCreatureGenes = crossOver(child, parent1CreatureGenes, parent2CreatureGenes, mutationChance);
 
                 child.setCreatureGenes(childCreatureGenes);
 
@@ -322,53 +251,28 @@ public class MyWorld extends World {
                 float[][] parent2ExploreGenes = parent2.getExploreGenes();
                 float[][] childExploreGenes = child.getExploreGenes();
 
-                //mutationChance = 0.05f;
-                for (int row = 0; row < childExploreGenes.length; row++) {
-                    if (rollChance(mutationChance)) {
-                        //childExploreGenes[row] = child.generateRandomChance();
-                        float max = parent1ExploreGenes[row][0];
-                        int index = 0;
-                        for (int col = 1; col < childExploreGenes[row].length; col++) {
-                            if (parent1ExploreGenes[row][col] > max) {
-                                max = parent1ExploreGenes[row][col];
-                                index = col;
-                            }
-                        }
-                        childExploreGenes[row][index] = 1f;
-                        //System.out.println(Arrays.toString(childMonsterGenes[row]));
-                    } else {
-                        for (int col = 0; col < childExploreGenes[row].length; col++) {
-                            float newGene = parent1ExploreGenes[row][col];
-                            newGene += parent2ExploreGenes[row][col];
-                            newGene /= 2;
-                            childExploreGenes[row][col] = newGene;
-                        }
-                    }
-
-                }
-
+                childExploreGenes = crossOver(child, parent1ExploreGenes, parent2ExploreGenes, mutationChance);
                 child.setExploreGenes(childExploreGenes);
 
                 new_population[creature] = child;
             }
 
         }
-        
-        try{
-        FileWriter fw = new FileWriter(DATAFILENAME,true);
-        BufferedWriter bw = new BufferedWriter(fw);
-        
-        bw.write(Float.toString(avgFitness));
-        bw.newLine();
-        bw.close();
-        fw.close();
-        
-        
-        }catch(IOException exception){
-        
+
+        try {
+            FileWriter fw = new FileWriter(DATAFILENAME, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+
+            bw.write(Float.toString(avgFitness)+","+ Float.toString(nSurvivors));
+            bw.newLine();
+            bw.close();
+            fw.close();
+
+        } catch (IOException exception) {
+
         }
         return new_population;
-        
+
     }
 
     public float[] calculatePopulationFitness(MyCreature[] population, int numCreatures) {
@@ -460,6 +364,55 @@ public class MyWorld extends World {
             //System.out.println(new_population[i]);
         }
         return new_population;
+    }
+
+    private float[][] crossOver(MyCreature child, float[][] parent1Genes, float[][] parent2Genes, float mutationChance) {
+        float[][] childGenes = new float[parent1Genes.length][parent1Genes[0].length];
+        if (rollChance(mutationChance)) {
+            System.out.println("Mutation");
+            childGenes = child.fillRandomArray(childGenes);
+            return childGenes;
+            /*//mutation bump one up to max.
+                    if (rollChance(mutationChance)) {
+                        //childMonsterGenes[row] = child.generateRandomChance();
+                        float max = parent1MonsterGenes[row][0];
+                        int index = 0;
+                        for (int col = 1; col < childMonsterGenes[row].length; col++) {
+                            if (parent1MonsterGenes[row][col] > max) {
+                                max = parent1MonsterGenes[row][col];
+                                index = col;
+                            }
+                        }
+                        childMonsterGenes[row][index] = 1f;
+                        //System.out.println(Arrays.toString(childMonsterGenes[row]));
+                 */
+        } else {
+            for (int row = 0; row < childGenes.length; row++) {
+
+                if (row < (childGenes.length/2)){
+                    for (int col = 0; col < childGenes[row].length; col++) {
+                        childGenes[row][col] = parent1Genes[row][col];
+                    }
+                }else{
+                    for (int col = 0; col < childGenes[row].length; col++) {
+                        childGenes[row][col] = parent2Genes[row][col];
+                    }
+                }
+                /*
+                AVerage Crossover
+                for (int col = 0; col < childGenes[row].length; col++) {
+                    float newGene = parent1Genes[row][col];
+                    newGene += parent2Genes[row][col];
+                    newGene /= 2;
+                    childGenes[row][col] = newGene;
+                }
+                
+                */
+                
+            }
+            return childGenes;
+        }
+
     }
 
 }

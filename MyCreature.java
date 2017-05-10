@@ -38,9 +38,9 @@ public class MyCreature extends Creature {
         this.greenHunger = rand.nextFloat();
         this.redHunger = rand.nextFloat();
 
-        this.monsterGenes = new float[9][];
-        this.foodGenes = new float[9][];
-        this.creatureGenes = new float[9][];
+        this.monsterGenes = new float[1024][];
+        this.foodGenes = new float[1024][];
+        this.creatureGenes = new float[1024][];
         this.exploreGene = new float[9][];
 
         fillArrayWithRandomChances(monsterGenes);
@@ -57,6 +57,14 @@ public class MyCreature extends Creature {
         }
 
     }
+    
+    public float[][] fillRandomArray(float[][] gene) {
+        for (int row = 0; row < gene.length; row++) {
+            gene[row] = generateRandomChance();
+            //System.out.println(Arrays.toString(gene[row]));
+        }
+        return gene;
+    }
 
     public MyCreature() {
 
@@ -65,9 +73,9 @@ public class MyCreature extends Creature {
         this.greenHunger = rand.nextFloat();
         this.redHunger = rand.nextFloat();
 
-        this.monsterGenes = new float[9][];
-        this.foodGenes = new float[9][];
-        this.creatureGenes = new float[9][];
+        this.monsterGenes = new float[1024][];
+        this.foodGenes = new float[1024][];
+        this.creatureGenes = new float[1024][];
         this.exploreGene = new float[1][];
 
         fillArrayWithRandomChances(monsterGenes);
@@ -104,8 +112,13 @@ public class MyCreature extends Creature {
         int foodCode = generatePerceptCode(percepts, 2);
         int creatureCode = generatePerceptCode(percepts, 3);
         int ripeCode = generatePerceptCode(percepts, 4);
+        
+        //System.out.println(monsterCode);
+        //System.out.println(foodCode);
+        //System.out.println(creatureCode);
         //System.out.println(ripeCode);
-        /*
+        
+                /*
         if (percepts[6] == 1) {
             actions = rollHunger(ripeCode);
             //System.out.println("eat");
@@ -120,13 +133,10 @@ public class MyCreature extends Creature {
         }
          */
 
-        //System.out.println(monsterCode);
-        //System.out.println(foodCode);
-        //System.out.println(creatureCode);
-        //System.out.println(ripeCode);
+        
         float[] chances = new float[numExpectedActions];
 
-        if (monsterCode != 4) {
+        if (monsterCode != 0) {
             chances = this.monsterGenes[monsterCode];
             //there is monster nearby
         } else {
@@ -136,11 +146,11 @@ public class MyCreature extends Creature {
                 return actions;
 
             } else {
-                if (foodCode != 4) {
+                if (foodCode != 0) {
                     //there is food nearby
                     chances = this.foodGenes[foodCode];
                 } else {
-                    if (creatureCode != 4) {
+                    if (creatureCode != 0) {
                         //creature nearyby
                         chances = this.creatureGenes[creatureCode];
                     } else {
@@ -156,21 +166,19 @@ public class MyCreature extends Creature {
 
     public float[] rollHunger(int ripeCode) {
         float[] actions = new float[11];
-        if (ripeCode == 1) {
+        if (ripeCode == 2) {
             if (this.redHunger > (float) getEnergy() / 100) {
                 actions = Actions.eat;
             } else {
                 actions = Actions.moveRandom;
             }
-        } else if (ripeCode == 2) {
+        } else if (ripeCode == 1) {
             if (this.greenHunger > (float) getEnergy() / 100) {
                 actions = Actions.eat;
             } else {
                 actions = Actions.moveRandom;
             }
-
         }
-
         return actions;
     }
 
@@ -202,9 +210,6 @@ public class MyCreature extends Creature {
 
     public int generatePerceptCode(int[] percepts, int choice) {
         int[] perceptsCopy = Arrays.copyOf(percepts, percepts.length);
-        for (int i = 0; i < perceptsCopy.length; i++) {
-            perceptsCopy[i]++;
-        }
         //System.out.println(Arrays.toString(perceptsCopy));
 
         StringBuilder perceptString = new StringBuilder();
@@ -214,32 +219,48 @@ public class MyCreature extends Creature {
         StringBuilder creatureString = new StringBuilder();
 
         for (int i = 0; i < percepts.length; i++) {
-            perceptString.append(perceptsCopy[i]);
+            perceptString.append(percepts[i]);
         }
-
-        for (int i = 0; i <= 1; i++) {
-            monsterString.append(perceptsCopy[i]);
+        
+        //Generate Monster Code.
+        for (int i = 0; i < percepts.length; i++) {
+          if (percepts[i] == 1){
+            monsterString.append("1");
+          }else{
+              monsterString.append("0");
+          }
         }
         //System.out.println(monsterString);
-        for (int i = 2; i <= 3; i++) {
-            creatureString.append(perceptsCopy[i]);
+        
+        //Generate Creature Code
+        for (int i = 0; i < percepts.length; i++) {
+            if(percepts[i] == 2){
+            creatureString.append("1");
+            }else{
+                creatureString.append("0");
+            }
         }
+        
         //System.out.println(creatureString);
-        for (int i = 4; i <= 5; i++) {
-            foodString.append(perceptsCopy[i]);
+        //Generate Food Code
+        for (int i = 0; i < percepts.length; i++) {
+            if (percepts[i] == 3){
+            foodString.append("1");
+            }else{
+                foodString.append("0");                
+            }
         }
-
-        for (int i = 6; i < percepts.length; i++) {
-            ripeString.append(percepts[i]);
-        }
+        //Generate Ripe Code
+        //ripeString.append(percepts[4]);
+        
 
         //System.out.println(foodString);
         //codes return value from 0 to 8 depending on location of nearest monster, creature, food etc.
-        int monsterCode = Integer.parseInt(monsterString.toString(), 3);
-        int creatureCode = Integer.parseInt(creatureString.toString(), 3);
-        int foodCode = Integer.parseInt(foodString.toString(), 3);
-        int perceptCode = Integer.parseInt(perceptString.toString(), 3);
-        int ripeCode = Integer.parseInt(ripeString.toString(), 2);
+        int monsterCode = Integer.parseInt(monsterString.toString(), 2);
+        int creatureCode = Integer.parseInt(creatureString.toString(), 2);
+        int foodCode = Integer.parseInt(foodString.toString(), 2);
+        int perceptCode = Integer.parseInt(perceptString.toString(), 4);
+        int ripeCode = percepts[4];
 
         switch (choice) {
             case 1:
