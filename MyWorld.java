@@ -166,23 +166,11 @@ public class MyWorld extends World {
         // some elitism, you can use old creatures in the next generation.  This
         // example code uses all the creatures from the old generation in the
         // new generation.
+        
         //Elitism
         int numberOfElites = numCreatures / 4;
-        TreeMap tm = new TreeMap();
-
-        for (int i = 0; i < numCreatures; i++) {
-            tm.put(getFitness(old_population[i]), i);
-        }
-
-        //System.out.println(tm.toString());
-        //want last entry
-        for (int i = 0; i < numberOfElites; i++) {
-            int index = ((Integer) tm.get(tm.lastKey()));
-            tm.remove(tm.lastKey());
-            new_population[i] = old_population[index];
-            //System.out.println(new_population[i]);
-        }
-
+        new_population = addElites(new_population,old_population, numberOfElites);
+        
         // Roulette Selection //Set up array for roulette selection
         float[] rouletteFitness = Arrays.copyOf(oldFitness, numCreatures);
         for (int i = 0; i < numCreatures; i++) {
@@ -210,6 +198,7 @@ public class MyWorld extends World {
                 //crossover green hunger
                 //check mutation first//mutation overwrites learned hunger.
                 float mutationChance = 0.02f;
+                
                 if (rollChance(mutationChance)) {
                     child.setGreenHunger(rand.nextFloat());
                 } else {
@@ -453,6 +442,24 @@ public class MyWorld extends World {
         } else {
             return false;
         }
+    }
+
+    private MyCreature[] addElites(MyCreature[] new_population, MyCreature[] old_population, int numberOfElites) {
+        TreeMap tm = new TreeMap();
+
+        for (int i = 0; i < old_population.length; i++) {
+            tm.put(getFitness(old_population[i]), i);
+        }
+
+        //System.out.println(tm.toString());
+        //want last entry
+        for (int i = 0; i < numberOfElites; i++) {
+            int index = ((Integer) tm.get(tm.lastKey()));
+            tm.remove(tm.lastKey());
+            new_population[i] = old_population[index];
+            //System.out.println(new_population[i]);
+        }
+        return new_population;
     }
 
 }
