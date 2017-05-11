@@ -19,8 +19,8 @@ public class MyWorld extends World {
    * and the number of generations that the genetic algorithm will 
    * execute.
      */
-    private final int _numTurns = 100;
-    private final int _numGenerations = 20000;
+    private final int _numTurns = 60;
+    private final int _numGenerations = 2000;
 
     private static final String DATAFILENAME = "dataout2.txt";
 
@@ -49,7 +49,7 @@ public class MyWorld extends World {
     public static void main(String[] args) {
         // Here you can specify the grid size, window size and whether torun
         // in repeatable mode or not
-        int gridSize = 24;
+        int gridSize = 30;
         int windowWidth = 1200;
         int windowHeight = 1200;
         boolean repeatableMode = true;
@@ -146,8 +146,10 @@ public class MyWorld extends World {
             }
         }
 
-        float[] oldFitness = calculatePopulationFitness(old_population, numCreatures);
-        float fitnessSum = sumOfFitness(old_population, numCreatures);
+        float fitnessSum = 0;
+        for (int creature = 0; creature < numCreatures; creature++) {
+            fitnessSum += getFitness(old_population[creature]);
+        }
 
         // Right now the information is used to print some stats...but you should
         // use this information to access creatures fitness.  It's up to you how
@@ -170,12 +172,15 @@ public class MyWorld extends World {
         int numberOfElites = numCreatures / 4;
         new_population = addElites(new_population, old_population, numberOfElites);
 
-        // Roulette Selection //Set up array for roulette selection
-        float[] rouletteFitness = Arrays.copyOf(oldFitness, numCreatures);
-        for (int i = 0; i < numCreatures; i++) {
-            rouletteFitness[i] /= fitnessSum;
+        // Roulette Selection 
+        //Set up array for roulette selection
+        float[] rouletteFitness = new float[numCreatures];
+        for (int creature = 0; creature < numCreatures; creature++) {
+            rouletteFitness[creature] = getFitness(old_population[creature]);
+            rouletteFitness[creature] /= fitnessSum;
         }
         //System.out.println(Arrays.toString(rouletteFitness));
+
         //Start new population loop
         if (numCreatures == 1) {
             new_population[0] = old_population[0];
@@ -190,12 +195,12 @@ public class MyWorld extends World {
                 while (parent1 == parent2) {
                     parent2 = old_population[pickParentIndex(rouletteFitness)];
                 }
-                //may want to create copy instead of copying pointer
-                MyCreature child = new MyCreature();
-                //crossover    //takes average of parents
 
+                //crossover    
                 //crossover green hunger
                 //check mutation first//mutation overwrites learned hunger.
+                MyCreature child = new MyCreature();
+
                 float mutationChance = 0.02f;
 
                 if (rollChance(mutationChance)) {
@@ -224,7 +229,7 @@ public class MyWorld extends World {
                 float[][] parent2MonsterGenes = parent2.getMonsterGenes();
                 float[][] childMonsterGenes = child.getMonsterGenes();
 
-                mutationChance = 0.02f;
+                mutationChance = 0.01f;
 
                 childMonsterGenes = crossOver(child, parent1MonsterGenes, parent2MonsterGenes, mutationChance);
                 child.setMonsterGenes(childMonsterGenes);
@@ -233,7 +238,7 @@ public class MyWorld extends World {
                 float[][] parent1FoodGenes = parent1.getFoodGenes();
                 float[][] parent2FoodGenes = parent2.getFoodGenes();
                 float[][] childFoodGenes = child.getFoodGenes();
-                
+
                 childFoodGenes = crossOver(child, parent1FoodGenes, parent2FoodGenes, mutationChance);
                 child.setFoodGenes(childFoodGenes);
 
@@ -259,11 +264,12 @@ public class MyWorld extends World {
 
         }
 
+        // Write average fitness to file for graphing output.
         try {
             FileWriter fw = new FileWriter(DATAFILENAME, true);
             BufferedWriter bw = new BufferedWriter(fw);
 
-            bw.write(Float.toString(avgFitness)+","+ Float.toString(nSurvivors));
+            bw.write(Float.toString(avgFitness) + "," + Float.toString(nSurvivors));
             bw.newLine();
             bw.close();
             fw.close();
@@ -271,41 +277,8 @@ public class MyWorld extends World {
         } catch (IOException exception) {
 
         }
+        printHungerStats(old_population);
         return new_population;
-
-    }
-
-    public float[] calculatePopulationFitness(MyCreature[] population, int numCreatures) {
-        //Fitness goes here.
-        float[] fitness = new float[numCreatures];
-        int turnBias = 4;
-        float denominator = ((float) _numTurns * turnBias) + 100;
-        for (int creature = 0; creature < numCreatures; creature++) {
-            boolean alive = !(population[creature].isDead());
-            if (alive) {
-                float baseFitness = ((float) _numTurns * turnBias) + population[creature].getEnergy();
-                //float normalisedFitness = baseFitness / denominator;
-                //fitness[creature] = normalisedFitness;
-                fitness[creature] = baseFitness;
-            } else {
-                float baseFitness = (population[creature].timeOfDeath() * turnBias) + population[creature].getEnergy();
-                //float normalisedFitness = baseFitness / denominator;
-                //fitness[creature] = normalisedFitness;
-                fitness[creature] = baseFitness;
-            }
-
-        }
-        return fitness;
-    }
-
-    public float sumOfFitness(MyCreature[] population, int numCreatures) {
-        float[] fitness = calculatePopulationFitness(population, numCreatures);
-        float sum = 0;
-        for (int creature = 0; creature < numCreatures; creature++) {
-            sum += fitness[creature];
-        }
-
-        return sum;
 
     }
 
@@ -385,20 +358,33 @@ public class MyWorld extends World {
                         }
                         childMonsterGenes[row][index] = 1f;
                         //System.out.println(Arrays.toString(childMonsterGenes[row]));
-                 */
+             */
         } else {
-            for (int row = 0; row < childGenes.length; row++) {
 
-                if (row < (childGenes.length/2)){
+            /* Alternating Crossover
+            for (int row = 0; row < childGenes.length; row++) {
+                if (row % 2 == 0) {
+                    childGenes[row] = parent1Genes[row];
+
+                } else {
+                    childGenes[row] = parent2Genes[row];
+                }
+            }
+             */
+            //Block Crossover
+            for (int row = 0; row < childGenes.length; row++) {
+                if (row < (childGenes.length / 2)) {
                     for (int col = 0; col < childGenes[row].length; col++) {
                         childGenes[row][col] = parent1Genes[row][col];
                     }
-                }else{
+                } else {
                     for (int col = 0; col < childGenes[row].length; col++) {
                         childGenes[row][col] = parent2Genes[row][col];
                     }
                 }
-                /*
+            }
+
+            /*
                 AVerage Crossover
                 for (int col = 0; col < childGenes[row].length; col++) {
                     float newGene = parent1Genes[row][col];
@@ -407,12 +393,41 @@ public class MyWorld extends World {
                     childGenes[row][col] = newGene;
                 }
                 
-                */
-                
-            }
-            return childGenes;
+             */
         }
-
+        return childGenes;
     }
 
+    /**
+     * Calculates statistics for hunger in a population of MyCreatures. Returns
+     * max and average for red and green hunger. Prints the values to the
+     * console.
+     *
+     * @param old_population - population to gather statistics on.
+     */
+    private void printHungerStats(MyCreature[] old_population) {
+        float redHungerSum = 0;
+        float greenHungerSum = 0;
+        int numCreatures = old_population.length;
+        float maxGreenHunger = 0;
+        float maxRedHunger = 0;
+
+        for (int i = 0; i < numCreatures; i++) {
+            if (maxGreenHunger < old_population[i].getGreenHunger()) {
+                maxGreenHunger = old_population[i].getGreenHunger();
+            }
+            if (maxRedHunger < old_population[i].getRedHunger()) {
+                maxRedHunger = old_population[i].getRedHunger();
+            }
+            redHungerSum += old_population[i].getRedHunger();
+            greenHungerSum += old_population[i].getGreenHunger();
+        }
+        float averageRedHunger = (((float) redHungerSum) / numCreatures);
+        float averageGreenHunger = (((float) greenHungerSum) / numCreatures);
+
+        System.out.println("Avg. Green Hunger" + averageGreenHunger);
+        System.out.println("Avg. Red Hunger " + averageRedHunger);
+        System.out.println("Max Green Hunger" + maxGreenHunger);
+        System.out.println("Max Red Hunger " + maxRedHunger);
+    }
 }

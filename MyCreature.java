@@ -70,9 +70,7 @@ public class MyCreature extends Creature {
 
         this.greenHunger = rand.nextFloat();
         this.redHunger = rand.nextFloat();
-        this.greenHunger = rand.nextFloat();
-        this.redHunger = rand.nextFloat();
-
+        
         this.monsterGenes = new float[1024][];
         this.foodGenes = new float[1024][];
         this.creatureGenes = new float[1024][];
@@ -99,6 +97,7 @@ public class MyCreature extends Creature {
      */
     @Override
     public float[] AgentFunction(int[] percepts, int numPercepts, int numExpectedActions) {
+        
 
         // This is where your chromosome gives rise to the model that maps
         // percepts to actions.  This function governs your creature's behaviour.
@@ -160,6 +159,7 @@ public class MyCreature extends Creature {
             }
         }
         actions = randomActionPick(chances);
+        //actions = chances;
 
         return actions;
     }
