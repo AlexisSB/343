@@ -24,6 +24,14 @@ public class MyCreature extends Creature {
     private float greenHunger;
     private float redHunger;
 
+    private enum Strawberry {
+        NONE, GREEN, RED
+    };
+
+    private enum GeneSelect {
+        MONSTER, FOOD, CREATURE, EXPLORE
+    };
+
 
     /* Empty constructor - might be a good idea here to put the code that 
    initialises the chromosome to some random state   
@@ -57,7 +65,7 @@ public class MyCreature extends Creature {
         }
 
     }
-    
+
     public float[][] fillRandomArray(float[][] gene) {
         for (int row = 0; row < gene.length; row++) {
             gene[row] = generateRandomChance();
@@ -70,7 +78,7 @@ public class MyCreature extends Creature {
 
         this.greenHunger = rand.nextFloat();
         this.redHunger = rand.nextFloat();
-        
+
         this.monsterGenes = new float[1024][];
         this.foodGenes = new float[1024][];
         this.creatureGenes = new float[1024][];
@@ -97,7 +105,6 @@ public class MyCreature extends Creature {
      */
     @Override
     public float[] AgentFunction(int[] percepts, int numPercepts, int numExpectedActions) {
-        
 
         // This is where your chromosome gives rise to the model that maps
         // percepts to actions.  This function governs your creature's behaviour.
@@ -106,40 +113,23 @@ public class MyCreature extends Creature {
         // At the moment, the actions are chosen completely at random, ignoring
         // the percepts.  You need to replace this code.
         //System.out.println(Arrays.toString(percepts));
+        //Generate the percept codes for each monsters, food and creatures.
         float actions[] = new float[numExpectedActions];
-        int monsterCode = generatePerceptCode(percepts, 1);
-        int foodCode = generatePerceptCode(percepts, 2);
-        int creatureCode = generatePerceptCode(percepts, 3);
-        int ripeCode = generatePerceptCode(percepts, 4);
-        
+        int monsterCode = generatePerceptCode(percepts, GeneSelect.MONSTER);
+        int foodCode = generatePerceptCode(percepts, GeneSelect.FOOD);
+        int creatureCode = generatePerceptCode(percepts, GeneSelect.CREATURE);
+        Strawberry ripeCode = generateRipeCode(percepts);
+
         //System.out.println(monsterCode);
         //System.out.println(foodCode);
         //System.out.println(creatureCode);
         //System.out.println(ripeCode);
-        
-                /*
-        if (percepts[6] == 1) {
-            actions = rollHunger(ripeCode);
-            //System.out.println("eat");
-        } else if (percepts[7] == 1) {
-            actions = rollHunger(ripeCode);
-            //System.out.println("eat");
-        } else {
-
-            for (int i = 0; i < numExpectedActions; i++) {
-                actions[i] = rand.nextFloat();
-            }
-        }
-         */
-
-        
         float[] chances = new float[numExpectedActions];
-
         if (monsterCode != 0) {
             chances = this.monsterGenes[monsterCode];
             //there is monster nearby
         } else {
-            if (ripeCode != 0) {
+            if (ripeCode != Strawberry.NONE) {
                 //you're sitting on food
                 actions = rollHunger(ripeCode);
                 return actions;
@@ -158,22 +148,31 @@ public class MyCreature extends Creature {
                 }
             }
         }
-        actions = randomActionPick(chances);
-        //actions = chances;
+        //S ystem.out.println(Arrays.toString(chances));
+        //actions = randomActionPick(chances);
+        actions = chances;
 
         return actions;
     }
 
-    public float[] rollHunger(int ripeCode) {
+    /**
+     * Decides whether the creature should eat when it is on a strawberry.
+     *
+     * @param ripeCode -
+     * @return
+     */
+    public float[] rollHunger(Strawberry ripeCode) {
         float[] actions = new float[11];
-        if (ripeCode == 2) {
-            if (this.redHunger > (float) getEnergy() / 100) {
+        if (ripeCode == Strawberry.RED) {
+            //if (this.redHunger > (float) getEnergy() / 100) {
+            if (this.redHunger > rand.nextFloat()) {
                 actions = Actions.eat;
             } else {
                 actions = Actions.moveRandom;
             }
-        } else if (ripeCode == 1) {
-            if (this.greenHunger > (float) getEnergy() / 100) {
+        } else if (ripeCode == Strawberry.GREEN) {
+            //if (this.greenHunger > (float) getEnergy() / 100) {
+            if (this.greenHunger > rand.nextFloat()) {
                 actions = Actions.eat;
             } else {
                 actions = Actions.moveRandom;
@@ -208,73 +207,98 @@ public class MyCreature extends Creature {
         return chances;
     }
 
-    public int generatePerceptCode(int[] percepts, int choice) {
+    public Strawberry generateRipeCode(int[] percepts) {
+        int ripeCode = percepts[4];
+        if (ripeCode == 0) {
+            return Strawberry.NONE;
+        } else {
+            if (ripeCode == 2) {
+                return Strawberry.RED;
+            } else {
+                if (ripeCode == 1) {
+                    return Strawberry.GREEN;
+                } else {
+                    System.out.println("ripecode cannot be generated");
+                    return Strawberry.NONE;
+                }
+            }
+        }
+    }
+
+    public int generatePerceptCode(int[] percepts, GeneSelect choice) {
+
+        /* Debug code        
         int[] perceptsCopy = Arrays.copyOf(percepts, percepts.length);
         //System.out.println(Arrays.toString(perceptsCopy));
 
         StringBuilder perceptString = new StringBuilder();
-        StringBuilder monsterString = new StringBuilder();
-        StringBuilder foodString = new StringBuilder();
-        StringBuilder ripeString = new StringBuilder();
-        StringBuilder creatureString = new StringBuilder();
-
+        
         for (int i = 0; i < percepts.length; i++) {
             perceptString.append(percepts[i]);
         }
-        
+         */
+        StringBuilder monsterString = new StringBuilder();
+        StringBuilder foodString = new StringBuilder();
+        StringBuilder creatureString = new StringBuilder();
+
         //Generate Monster Code.
         for (int i = 0; i < percepts.length; i++) {
-          if (percepts[i] == 1){
-            monsterString.append("1");
-          }else{
-              monsterString.append("0");
-          }
+            if (i != 4) {
+                if (percepts[i] == 1) {
+                    monsterString.append("1");
+                } else {
+                    monsterString.append("0");
+                }
+            } else {
+                monsterString.append("0");
+            }
         }
         //System.out.println(monsterString);
-        
+
         //Generate Creature Code
         for (int i = 0; i < percepts.length; i++) {
-            if(percepts[i] == 2){
-            creatureString.append("1");
-            }else{
+            if (i != 4) {
+                if (percepts[i] == 2) {
+                    creatureString.append("1");
+                } else {
+                    creatureString.append("0");
+                }
+            } else {
                 creatureString.append("0");
             }
         }
-        
+
         //System.out.println(creatureString);
         //Generate Food Code
         for (int i = 0; i < percepts.length; i++) {
-            if (percepts[i] == 3){
-            foodString.append("1");
-            }else{
-                foodString.append("0");                
+            if (i != 4) {
+                if (percepts[i] == 3) {
+                    foodString.append("1");
+                } else {
+                    foodString.append("0");
+                }
+            } else {
+                foodString.append("0");
             }
         }
-        //Generate Ripe Code
-        //ripeString.append(percepts[4]);
-        
-
         //System.out.println(foodString);
+                
         //codes return value from 0 to 8 depending on location of nearest monster, creature, food etc.
         int monsterCode = Integer.parseInt(monsterString.toString(), 2);
         int creatureCode = Integer.parseInt(creatureString.toString(), 2);
         int foodCode = Integer.parseInt(foodString.toString(), 2);
-        int perceptCode = Integer.parseInt(perceptString.toString(), 4);
-        int ripeCode = percepts[4];
+        //int perceptCode = Integer.parseInt(perceptString.toString(), 4);
 
         switch (choice) {
-            case 1:
+            case MONSTER:
                 return monsterCode;
-            case 2:
+            case FOOD:
                 return foodCode;
-            case 3:
+            case CREATURE:
                 return creatureCode;
-            case 4:
-                return ripeCode;
-            case 5:
-                return perceptCode;
+
             default:
-                System.out.println("Error choice of percept code incorrect");
+                System.out.println("Error choice of percept code invalid");
                 return -1;
         }
     }
@@ -320,13 +344,13 @@ public class MyCreature extends Creature {
     public float getGreenHunger() {
         return this.greenHunger;
     }
-    
-    public float getRedHunger(){
+
+    public float getRedHunger() {
         return this.redHunger;
     }
-    
+
     public void setMonsterGenes(float[][] newGenes) {
-        this.monsterGenes= newGenes;
+        this.monsterGenes = newGenes;
     }
 
     public void setFoodGenes(float[][] newGenes) {
@@ -334,21 +358,19 @@ public class MyCreature extends Creature {
     }
 
     public void setCreatureGenes(float[][] newGenes) {
-        this.creatureGenes= newGenes;
+        this.creatureGenes = newGenes;
     }
 
     public void setExploreGenes(float[][] newGenes) {
-        this.exploreGene= newGenes;
+        this.exploreGene = newGenes;
     }
 
     public void setGreenHunger(float newHunger) {
         this.greenHunger = newHunger;
     }
-    
+
     public void setRedHunger(float newHunger) {
         this.redHunger = newHunger;
     }
-    
-    
 
 }

@@ -19,10 +19,35 @@ public class MyWorld extends World {
    * and the number of generations that the genetic algorithm will 
    * execute.
      */
-    private final int _numTurns = 60;
+    private final int _numTurns = 100;
     private final int _numGenerations = 2000;
 
-    private static final String DATAFILENAME = "dataout2.txt";
+    private static final String DATAFILENAME = "dataout2.csv";
+
+    /* The main function for the MyWorld application
+
+     */
+    public static void main(String[] args) {
+        // Here you can specify the grid size, window size and whether torun
+        // in repeatable mode or not
+        int gridSize = 35;
+        int windowWidth = 1400;
+        int windowHeight = 1400;
+        boolean repeatableMode = false;
+
+        /* Here you can specify percept format to use - there are three to
+         chose from: 1, 2, 3.  Refer to the Assignment2 instructions for
+         explanation of the three percept formats.
+         */
+        int perceptFormat = 3;
+        
+        File outputFile = new File(DATAFILENAME);
+            outputFile.delete();
+
+        // Instantiate MyWorld object.  The rest of the application is driven
+        // from the window that will be displayed.
+        MyWorld sim = new MyWorld(gridSize, windowWidth, windowHeight, repeatableMode, perceptFormat);
+    }
 
     /* Constructor.  
    
@@ -42,29 +67,6 @@ public class MyWorld extends World {
         this.setNumGenerations(_numGenerations);
 
     }
-
-    /* The main function for the MyWorld application
-
-     */
-    public static void main(String[] args) {
-        // Here you can specify the grid size, window size and whether torun
-        // in repeatable mode or not
-        int gridSize = 30;
-        int windowWidth = 1200;
-        int windowHeight = 1200;
-        boolean repeatableMode = true;
-
-        /* Here you can specify percept format to use - there are three to
-         chose from: 1, 2, 3.  Refer to the Assignment2 instructions for
-         explanation of the three percept formats.
-         */
-        int perceptFormat = 3;
-
-        // Instantiate MyWorld object.  The rest of the application is driven
-        // from the window that will be displayed.
-        MyWorld sim = new MyWorld(gridSize, windowWidth, windowHeight, repeatableMode, perceptFormat);
-    }
-
 
     /* The MyWorld class must override this function, which is
      used to fetch a population of creatures at the beginning of the
@@ -120,21 +122,12 @@ public class MyWorld extends World {
         // Create a new array for the new population
         MyCreature[] new_population = new MyCreature[numCreatures];
 
-        // Here is how you can get information about old creatures and how
-        // well they did in the simulation
+        // Simulation Stats for old population
         float avgLifeTime = 0f;
         int nSurvivors = 0;
+        float fitnessSum = 0;
         for (MyCreature creature : old_population) {
-            // The energy of the creature.  This is zero if creature starved to
-            // death, non-negative oterhwise.  If this number is zero, but the 
-            // creature is dead, then this number gives the enrgy of the creature
-            // at the time of death.
-            int energy = creature.getEnergy();
-
-            // This querry can tell you if the creature died during simulation
-            // or not.  
             boolean dead = creature.isDead();
-
             if (dead) {
                 // If the creature died during simulation, you can determine
                 // its time of death (in turns)
@@ -144,23 +137,23 @@ public class MyWorld extends World {
                 nSurvivors += 1;
                 avgLifeTime += (float) _numTurns;
             }
+            fitnessSum += getFitness(creature);
         }
 
-        float fitnessSum = 0;
-        for (int creature = 0; creature < numCreatures; creature++) {
-            fitnessSum += getFitness(old_population[creature]);
-        }
+        printHungerStats(old_population);
+        //System.out.println(fitnessSum);
 
         // Right now the information is used to print some stats...but you should
         // use this information to access creatures fitness.  It's up to you how
         // you define your fitness function.  You should add a print out or
         // some visual display of average fitness over generations.
         avgLifeTime /= (float) numCreatures;
-        float avgFitness = ((float) fitnessSum / numCreatures);
+        float avgFitness = fitnessSum / numCreatures;
         System.out.println("Simulation stats:");
-        System.out.println("  Survivors    : " + nSurvivors + " out of " + numCreatures);
-        System.out.println("  Avg life time: " + avgLifeTime + " turns");
-        System.out.println("Avg Fitness: " + avgFitness);
+        System.out.println("\tSurvivors    : " + nSurvivors + " out of " + numCreatures);
+        System.out.println("\tAvg life time: " + avgLifeTime + " turns");
+        System.out.println("\tAvg Fitness: " + avgFitness);
+        System.out.println("\tAvg Normalised Fitness" + (avgFitness / ((_numTurns * 4) + 100)));
 
         // Having some way of measuring the fitness, you should implement a proper
         // parent selection method here and create a set of new creatures.  You need
@@ -172,7 +165,7 @@ public class MyWorld extends World {
         int numberOfElites = numCreatures / 4;
         new_population = addElites(new_population, old_population, numberOfElites);
 
-        // Roulette Selection 
+        //Roulette Selection 
         //Set up array for roulette selection
         float[] rouletteFitness = new float[numCreatures];
         for (int creature = 0; creature < numCreatures; creature++) {
@@ -181,7 +174,9 @@ public class MyWorld extends World {
         }
         //System.out.println(Arrays.toString(rouletteFitness));
 
-        //Start new population loop
+        //Start creating new population.
+        // Case where only one creature in population used for testing.
+        //
         if (numCreatures == 1) {
             new_population[0] = old_population[0];
 
@@ -198,65 +193,58 @@ public class MyWorld extends World {
 
                 //crossover    
                 //crossover green hunger
-                //check mutation first//mutation overwrites learned hunger.
                 MyCreature child = new MyCreature();
 
-                float mutationChance = 0.02f;
+                // Set mutation chance for hunger crossover
+                float hungerMutationChance = 0.02f;
 
-                if (rollChance(mutationChance)) {
+                if (rollChance(hungerMutationChance)) {
                     child.setGreenHunger(rand.nextFloat());
                 } else {
                     float newGreenHunger = parent1.getGreenHunger();
-                    newGreenHunger += parent2.getRedHunger();
-                    newGreenHunger /= 2;
                     child.setGreenHunger(newGreenHunger);
                 }
 
                 //cross over red hunger
-                mutationChance = 0.02f;
-                if (rollChance(mutationChance)) {
+                if (rollChance(hungerMutationChance)) {
                     child.setRedHunger(rand.nextFloat());
                 } else {
-                    float newRedHunger = parent1.getRedHunger();
-                    newRedHunger += parent2.getRedHunger();
-                    newRedHunger /= 2;
+                    float newRedHunger = parent2.getRedHunger();
                     child.setRedHunger(newRedHunger);
-                    //site for mutation
                 }
 
+                // Set mutation chance for food,monster etc genes.
+                float geneMutationChance = 0.01f;
+
                 //cross over monsterGenes
-                float[][] parent1MonsterGenes = parent1.getMonsterGenes();
-                float[][] parent2MonsterGenes = parent2.getMonsterGenes();
-                float[][] childMonsterGenes = child.getMonsterGenes();
+                float[][] childMonsterGenes = crossOver(child,
+                        parent1.getMonsterGenes(),
+                        parent2.getMonsterGenes(),
+                        geneMutationChance);
 
-                mutationChance = 0.01f;
-
-                childMonsterGenes = crossOver(child, parent1MonsterGenes, parent2MonsterGenes, mutationChance);
                 child.setMonsterGenes(childMonsterGenes);
 
                 //cross over food Genes
-                float[][] parent1FoodGenes = parent1.getFoodGenes();
-                float[][] parent2FoodGenes = parent2.getFoodGenes();
-                float[][] childFoodGenes = child.getFoodGenes();
-
-                childFoodGenes = crossOver(child, parent1FoodGenes, parent2FoodGenes, mutationChance);
+                float[][] childFoodGenes = crossOver(child,
+                        parent1.getFoodGenes(),
+                        parent2.getFoodGenes(),
+                        geneMutationChance);
                 child.setFoodGenes(childFoodGenes);
 
                 //cross over CreatureGenes
-                float[][] parent1CreatureGenes = parent1.getCreatureGenes();
-                float[][] parent2CreatureGenes = parent2.getCreatureGenes();
-                float[][] childCreatureGenes = child.getCreatureGenes();
-
-                childCreatureGenes = crossOver(child, parent1CreatureGenes, parent2CreatureGenes, mutationChance);
+                float[][] childCreatureGenes = crossOver(child,
+                        parent1.getCreatureGenes(),
+                        parent2.getCreatureGenes(),
+                        geneMutationChance);
 
                 child.setCreatureGenes(childCreatureGenes);
 
                 //cross over exploreGene
-                float[][] parent1ExploreGenes = parent1.getExploreGenes();
-                float[][] parent2ExploreGenes = parent2.getExploreGenes();
-                float[][] childExploreGenes = child.getExploreGenes();
-
-                childExploreGenes = crossOver(child, parent1ExploreGenes, parent2ExploreGenes, mutationChance);
+                float[][] childExploreGenes = crossOver(child,
+                        parent1.getExploreGenes(),
+                        parent2.getExploreGenes(),
+                        geneMutationChance);
+                
                 child.setExploreGenes(childExploreGenes);
 
                 new_population[creature] = child;
@@ -277,7 +265,7 @@ public class MyWorld extends World {
         } catch (IOException exception) {
 
         }
-        printHungerStats(old_population);
+
         return new_population;
 
     }
