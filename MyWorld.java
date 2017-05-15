@@ -9,7 +9,7 @@ import java.io.*;
  * variables that control the simulations and override functions that generate
  * populations of creatures that the World requires for its simulations.
  *
- * @author
+ * @author Alexis Barltrop
  * @version 1.0
  * @since 2017-04-05
  */
@@ -25,7 +25,6 @@ public class MyWorld extends World {
     private static final String DATAFILENAME = "dataout100002percent.csv";
 
     /* The main function for the MyWorld application
-
      */
     public static void main(String[] args) {
         // Here you can specify the grid size, window size and whether torun
