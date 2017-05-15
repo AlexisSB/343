@@ -15,15 +15,18 @@ public class MyCreature extends Creature {
 
     // Random number generator
     Random rand = new Random();
-    //float[][] chromosome;
+
+    //Chromosome Lookup Tables
     private float[][] monsterGenes;
     private float[][] foodGenes;
     private float[][] creatureGenes;
     private float[][] exploreGene;
-    //int chromosomeLength;
+
+    //Chromosome hunger values
     private float greenHunger;
     private float redHunger;
 
+    //Enumberated types for class.
     private enum Strawberry {
         NONE, GREEN, RED
     };
@@ -41,37 +44,7 @@ public class MyCreature extends Creature {
                       to produce on every turn
      */
     public MyCreature(int numPercepts, int numActions) {
-        //this.chromosomeLength = 1;
-        //this.chromosome = new float[chromosomeLength][];
-        this.greenHunger = rand.nextFloat();
-        this.redHunger = rand.nextFloat();
-
-        this.monsterGenes = new float[1024][];
-        this.foodGenes = new float[1024][];
-        this.creatureGenes = new float[1024][];
-        this.exploreGene = new float[9][];
-
-        fillArrayWithRandomChances(monsterGenes);
-        fillArrayWithRandomChances(foodGenes);
-        fillArrayWithRandomChances(creatureGenes);
-        fillArrayWithRandomChances(exploreGene);
-
-    }
-
-    public void fillArrayWithRandomChances(float[][] gene) {
-        for (int row = 0; row < gene.length; row++) {
-            gene[row] = generateRandomChance();
-            //System.out.println(Arrays.toString(gene[row]));
-        }
-
-    }
-
-    public float[][] fillRandomArray(float[][] gene) {
-        for (int row = 0; row < gene.length; row++) {
-            gene[row] = generateRandomChance();
-            //System.out.println(Arrays.toString(gene[row]));
-        }
-        return gene;
+        this();
     }
 
     public MyCreature() {
@@ -84,12 +57,44 @@ public class MyCreature extends Creature {
         this.creatureGenes = new float[1024][];
         this.exploreGene = new float[1][];
 
-        fillArrayWithRandomChances(monsterGenes);
-        fillArrayWithRandomChances(foodGenes);
-        fillArrayWithRandomChances(creatureGenes);
-        fillArrayWithRandomChances(exploreGene);
+        fillArrayWithRandomAction(monsterGenes);
+        fillArrayWithRandomAction(foodGenes);
+        fillArrayWithRandomAction(creatureGenes);
+        fillArrayWithRandomAction(exploreGene);
 
     }
+
+    /**
+     * Fills given array with action vectors using following method.
+     *
+     * @param gene - 2D array to fill will action vectors.
+     */
+    private void fillArrayWithRandomAction(float[][] gene) {
+        for (int row = 0; row < gene.length; row++) {
+            gene[row] = generateRandomActionArray();
+            //System.out.println(Arrays.toString(gene[row]));
+        }
+
+    }
+
+    /**
+     * Creates an size 11 action array with one random value set to 1. Will not
+     * create one in index 9 as this is the eat command. Eat command handled by
+     * hunger.
+     *
+     * @return random action array.
+     */
+    private float[] generateRandomActionArray() {
+        float[] chances = new float[11];
+        int index = rand.nextInt(11);
+        while (index == 9) {
+            index = rand.nextInt(11);
+        }
+        chances[index] = 1f;
+        //System.out.println(Arrays.toString(chances));
+        return chances;
+    }
+    
 
     /* This function must be overridden by MyCreature, because it implements
      the AgentFunction which controls creature behavoiur.  This behaviour
@@ -161,7 +166,7 @@ public class MyCreature extends Creature {
      * @param ripeCode -
      * @return
      */
-    public float[] rollHunger(Strawberry ripeCode) {
+    private float[] rollHunger(Strawberry ripeCode) {
         float[] actions = new float[11];
         if (ripeCode == Strawberry.RED) {
             //if (this.redHunger > (float) getEnergy() / 100) {
@@ -181,33 +186,7 @@ public class MyCreature extends Creature {
         return actions;
     }
 
-    public float[] generateRandomChance() {
-        float[] chances = new float[11];
-
-        //add one to onyl one entry
-        int index = rand.nextInt(11);
-        while (index == 9) {
-            index = rand.nextInt(11);
-        }
-        chances[index] = 1f;
-        //System.out.println(Arrays.toString(chances));
-
-        /*Creates completely random chance
-        float sum = 0;
-        for (int i = 0; i < chances.length; i++) {
-            chances[i] = rand.nextFloat();
-            sum += chances[i];
-        }
-
-        //normalise
-        for (int i = 0; i < chances.length; i++) {
-            chances[i] /= sum;
-        }
-         */
-        return chances;
-    }
-
-    public Strawberry generateRipeCode(int[] percepts) {
+    private Strawberry generateRipeCode(int[] percepts) {
         int ripeCode = percepts[4];
         if (ripeCode == 0) {
             return Strawberry.NONE;
@@ -225,7 +204,7 @@ public class MyCreature extends Creature {
         }
     }
 
-    public int generatePerceptCode(int[] percepts, GeneSelect choice) {
+    private int generatePerceptCode(int[] percepts, GeneSelect choice) {
 
         /* Debug code        
         int[] perceptsCopy = Arrays.copyOf(percepts, percepts.length);
@@ -249,8 +228,6 @@ public class MyCreature extends Creature {
                 } else {
                     monsterString.append("0");
                 }
-            } else {
-                monsterString.append("0");
             }
         }
         //System.out.println(monsterString);
@@ -263,8 +240,6 @@ public class MyCreature extends Creature {
                 } else {
                     creatureString.append("0");
                 }
-            } else {
-                creatureString.append("0");
             }
         }
 
@@ -277,12 +252,10 @@ public class MyCreature extends Creature {
                 } else {
                     foodString.append("0");
                 }
-            } else {
-                foodString.append("0");
             }
         }
         //System.out.println(foodString);
-                
+
         //codes return value from 0 to 8 depending on location of nearest monster, creature, food etc.
         int monsterCode = Integer.parseInt(monsterString.toString(), 2);
         int creatureCode = Integer.parseInt(creatureString.toString(), 2);
@@ -323,6 +296,19 @@ public class MyCreature extends Creature {
             index++;
         }
         return index;
+    }
+    
+    /**
+     * Public setter method to create random gene.
+     * @param gene - data field gene to scramble
+     * @return the scramble gene.
+     */
+    public float[][] setGeneToRandom(float[][] gene) {
+        for (int row = 0; row < gene.length; row++) {
+            gene[row] = generateRandomActionArray();
+            //System.out.println(Arrays.toString(gene[row]));
+        }
+        return gene;
     }
 
     public float[][] getMonsterGenes() {
