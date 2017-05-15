@@ -1,12 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
- *
- * @author Alexis
+ * Support Class for MyCreature.
+ * Handles Action vector operations.
+ * @author Alexis Barltrop
  */
 public class Actions {
 

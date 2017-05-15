@@ -47,8 +47,10 @@ public class MyCreature extends Creature {
         this();
     }
 
+    /** 
+     * Constructor 
+     */
     public MyCreature() {
-
         this.greenHunger = rand.nextFloat();
         this.redHunger = rand.nextFloat();
 
@@ -129,42 +131,38 @@ public class MyCreature extends Creature {
         //System.out.println(foodCode);
         //System.out.println(creatureCode);
         //System.out.println(ripeCode);
-        float[] chances = new float[numExpectedActions];
+        
         if (monsterCode != 0) {
-            chances = this.monsterGenes[monsterCode];
+            actions = this.monsterGenes[monsterCode];
             //there is monster nearby
         } else {
             if (ripeCode != Strawberry.NONE) {
                 //you're sitting on food
                 actions = rollHunger(ripeCode);
                 return actions;
-
             } else {
                 if (foodCode != 0) {
                     //there is food nearby
-                    chances = this.foodGenes[foodCode];
+                    actions = this.foodGenes[foodCode];
                 } else {
                     if (creatureCode != 0) {
                         //creature nearyby
-                        chances = this.creatureGenes[creatureCode];
+                        actions = this.creatureGenes[creatureCode];
                     } else {
-                        chances = this.exploreGene[0];
+                        actions = this.exploreGene[0];
                     }
                 }
             }
         }
-        //S ystem.out.println(Arrays.toString(chances));
-        //actions = randomActionPick(chances);
-        actions = chances;
-
+        //System.out.println(Arrays.toString(chances));
         return actions;
     }
 
     /**
      * Decides whether the creature should eat when it is on a strawberry.
      *
-     * @param ripeCode -
-     * @return
+     * @param ripeCode - type of strawberry red,green or none.
+     * @return action vector either eat or move random
      */
     private float[] rollHunger(Strawberry ripeCode) {
         float[] actions = new float[11];
@@ -186,6 +184,11 @@ public class MyCreature extends Creature {
         return actions;
     }
 
+    /**
+     * Determines the type of strawberry from the percept array.
+     * @param percepts the percepts array for the creature
+     * @return type of strawberry ether red,green or none
+     */
     private Strawberry generateRipeCode(int[] percepts) {
         int ripeCode = percepts[4];
         if (ripeCode == 0) {
@@ -204,18 +207,18 @@ public class MyCreature extends Creature {
         }
     }
 
+    /**
+     * Generates the monster,food and creature codes from the percept array.
+     * Parses through the percept array and adds a "1" if element present, 
+     * or a "0" if that element not present. 
+     * This generates a 8bit string that is converted to a decimal index for 
+     * the corresponding chromosome. 
+     * @param percepts - the percepts array input
+     * @param choice - the choice of whether to look at monsters,creatures or food.
+     * @return an int representing the code for the corresponding gene.
+     */
     private int generatePerceptCode(int[] percepts, GeneSelect choice) {
 
-        /* Debug code        
-        int[] perceptsCopy = Arrays.copyOf(percepts, percepts.length);
-        //System.out.println(Arrays.toString(perceptsCopy));
-
-        StringBuilder perceptString = new StringBuilder();
-        
-        for (int i = 0; i < percepts.length; i++) {
-            perceptString.append(percepts[i]);
-        }
-         */
         StringBuilder monsterString = new StringBuilder();
         StringBuilder foodString = new StringBuilder();
         StringBuilder creatureString = new StringBuilder();
@@ -242,8 +245,8 @@ public class MyCreature extends Creature {
                 }
             }
         }
-
         //System.out.println(creatureString);
+        
         //Generate Food Code
         for (int i = 0; i < percepts.length; i++) {
             if (i != 4) {
@@ -256,12 +259,12 @@ public class MyCreature extends Creature {
         }
         //System.out.println(foodString);
 
-        //codes return value from 0 to 8 depending on location of nearest monster, creature, food etc.
+        //codes return value from 0 to 8 depending on location
+        //of nearest monster, creature, food etc.
         int monsterCode = Integer.parseInt(monsterString.toString(), 2);
         int creatureCode = Integer.parseInt(creatureString.toString(), 2);
         int foodCode = Integer.parseInt(foodString.toString(), 2);
-        //int perceptCode = Integer.parseInt(perceptString.toString(), 4);
-
+        
         switch (choice) {
             case MONSTER:
                 return monsterCode;
@@ -275,19 +278,6 @@ public class MyCreature extends Creature {
                 return -1;
         }
     }
-
-    public float[] randomActionPick(float[] chances) {
-
-        if (chances.length != 11) {
-            System.out.println("Length does not match action vector");
-            System.exit(0);
-        }
-        float[] action;
-        int index = pickIndex(chances);
-        action = Actions.pickAction(index);
-        return action;
-    }
-
     public int pickIndex(float[] chances) {
         int index = 0;
         float number = rand.nextFloat();
@@ -311,6 +301,10 @@ public class MyCreature extends Creature {
         return gene;
     }
 
+    /**
+     * Getter methods for the genes and data fields.
+     * @return the corresponding gene.
+     */
     public float[][] getMonsterGenes() {
         return this.monsterGenes;
     }
@@ -335,6 +329,10 @@ public class MyCreature extends Creature {
         return this.redHunger;
     }
 
+    /** Mutator methods for the genes
+     * @param genes - genes to overwrite the corresponding genes.     
+     */
+    
     public void setMonsterGenes(float[][] newGenes) {
         this.monsterGenes = newGenes;
     }
